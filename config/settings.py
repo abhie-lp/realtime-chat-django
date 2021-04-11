@@ -41,6 +41,7 @@ INSTALLED_APPS = [
 ]
 
 INSTALLED_APPS += [
+    "account.apps.AccountConfig",
     "personal.apps.PersonalConfig",
 ]
 
@@ -144,3 +145,5 @@ MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media_cdn"
 
 TEMP_DIR = BASE_DIR / "media_cdn/temp"
+
+AUTH_USER_MODEL = "account.Account"
