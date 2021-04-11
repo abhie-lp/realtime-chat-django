@@ -147,3 +147,7 @@ MEDIA_ROOT = BASE_DIR / "media_cdn"
 TEMP_DIR = BASE_DIR / "media_cdn/temp"
 
 AUTH_USER_MODEL = "account.Account"
+AUTHENTICATION_BACKENDS = (
+    "django.contrib.auth.backends.AllowAllUsersModelBackend",
+    "account.custom_authentication.CaseInsensitiveModelBackend",
+)
