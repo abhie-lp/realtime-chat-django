@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block page_style %}
+  <style type="text/css">
+    .my-grid {
+      border: 1px solid blue;
+    }
+    .my-grid-item {
+      border: 1px solid black;
+    }
+  </style>
+{% endblock page_style %}
+
+{% block content %}
+  <div class="">
+    <div class="my-grid d-flex flex-row">
+      <p class="my-grid-item m-auto">Item 1</p>
+      <p class="my-grid-item m-auto">Item 2</p>
+      <p class="my-grid-item m-auto">Item 3</p>
+      <p class="my-grid-item m-auto">Item 4</p>
+      <p class="my-grid-item m-auto">Item 5</p>
+      <p class="my-grid-item m-auto">Item 6</p>
+      <p class="my-grid-item m-auto">Item 7</p>
+    </div>
+
+    <div class="container">
+      <div class="my-grid d-flex flex-column mt-4">
+        <p class="my-grid-item m-auto">Item 1</p>
+        <p class="my-grid-item m-auto">Item 2</p>
+        <p class="my-grid-item m-auto">Item 3</p>
+        <p class="my-grid-item m-auto">Item 4</p>
+        <p class="my-grid-item m-auto">Item 5</p>
+        <p class="my-grid-item m-auto">Item 6</p>
+        <p class="my-grid-item m-auto">Item 7</p>
+      </div>
+    </div>
+  </div>
+{% endblock content %}
