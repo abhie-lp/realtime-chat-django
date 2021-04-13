@@ -44,13 +44,16 @@ def login_view(request):
         if form.is_valid():
             user = authenticate(email=form.cleaned_data["email"],
                                 password=form.cleaned_data["password"])
-            if user.is_active:
-                login(request, user)
-                if request.GET.get("next"):
-                    return redirect(request.GET.get("next"))
-                return redirect("home")
+            if user:
+                if user.is_active:
+                    login(request, user)
+                    if request.GET.get("next"):
+                        return redirect(request.GET.get("next"))
+                    return redirect("home")
+                else:
+                    form.add_error(None, "User account is not active.")
             else:
-                form.add_error(None, "User account is not active.")
+                form.add_error(None, "User not found with above credentials")
     else:
         form = LoginForm()
     return render(request, "account/login.html", {"login_form": form})
