@@ -34,3 +34,9 @@ class RegistrationForm(UserCreationForm):
         except Account.DoesNotExist:
             return username
         raise forms.ValidationError(f"Username {username} already in use.")
+
+
+class LoginForm(forms.Form):
+    """Create a login form"""
+    password = forms.CharField(label="Password", widget=forms.PasswordInput)
+    email = forms.EmailField(label="Email")

@@ -51,15 +51,15 @@
                   src="{{ request.user.profile_image.url }}" alt="account logo" width="40" height="40"/>
               <div class="dropdown-menu" aria-labelledby="id_profile_links">
                 <a class="dropdown-item" href="#account">Account</a>
-                <a class="dropdown-item" href="#logout">Logout</a>
+                <a class="dropdown-item" href="{% url 'logout' %}">Logout</a>
               </div>
             </div>
             <!-- end account notifications -->
           </div>
 
         {% else %}
-          <a class="p-2 text-dark" href="#login">Login</a>
-          <a class="btn btn-outline-primary" href="#register">Register</a>
+          <a class="p-2 text-dark" href="{% url 'login' %}">Login</a>
+          <a class="btn btn-outline-primary" href="{% url 'register' %}">Register</a>
         {% endif %}
       </nav>
     </div>
@@ -92,14 +92,14 @@
                   alt="account logo" width="40" height="40"/>
               <div class="dropdown-menu" aria-labelledby="id_profile_links">
                 <a class="dropdown-item" href="#account">Account</a>
-                <a class="dropdown-item" href="#logout">Logout</a>
+                <a class="dropdown-item" href="{% url 'logout' %}">Logout</a>
               </div>
             </div>
             <!-- end account notifications -->
           </div>
         {% else %}
-          <a class="p-2 text-dark" href="#login">Login</a>
-          <a class="btn btn-outline-primary m-2" href="#register">Register</a>
+          <a class="p-2 text-dark" href="{% url 'login' %}">Login</a>
+          <a class="btn btn-outline-primary m-2" href="{% url 'register' %}">Register</a>
         {% endif %}
       </nav>
     </div>
