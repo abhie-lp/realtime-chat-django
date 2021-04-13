@@ -109,9 +109,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-if DEBUG:
-    AUTH_PASSWORD_VALIDATORS = []
-
 
 # Internationalization
 # https://docs.djangoproject.com/en/3.2/topics/i18n/
@@ -154,3 +151,7 @@ AUTHENTICATION_BACKENDS = (
     "django.contrib.auth.backends.AllowAllUsersModelBackend",
     "account.custom_authentication.CaseInsensitiveModelBackend",
 )
+
+if DEBUG:
+    AUTH_PASSWORD_VALIDATORS = []
+    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
