@@ -54,7 +54,7 @@ class Account(AbstractBaseUser):
     is_superuser = models.BooleanField(default=False)
     profile_image = models.ImageField(
         max_length=255,  null=True, blank=True,
-        upload_to=get_default_profile_image,
+        upload_to=get_profile_image_filepath,
         default=get_default_profile_image
     )
     hide_email = models.BooleanField(default=True)
