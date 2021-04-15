@@ -1,8 +1,9 @@
-from django.http import HttpResponse
+from django.http import HttpResponse, Http404
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, authenticate, logout
 
 from .forms import RegistrationForm, LoginForm
+from .models import Account
 
 
 def register_view(request):
@@ -57,3 +58,22 @@ def login_view(request):
     else:
         form = LoginForm()
     return render(request, "account/login.html", {"login_form": form})
+
+
+def account_view(request, username):
+    """View to show details of user account"""
+    try:
+        account = Account.objects.get(username=username)
+    except Account.DoesNotExist:
+        return Http404("The user doesn't exist.")
+    else:
+        request_user = request.user
+        is_self, is_friend = True, False
+
+        if request_user.is_authenticated and request_user != account:
+            is_self = False
+        elif not request_user.is_authenticated:
+            is_self = False
+    return render(request, "account/account.html",
+                  {"account": account, "is_self": is_self,
+                   "is_friend": is_friend})

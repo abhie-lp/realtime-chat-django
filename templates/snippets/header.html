@@ -50,7 +50,7 @@
                   aria-expanded="false"
                   src="{{ request.user.profile_image.url }}" alt="account logo" width="40" height="40"/>
               <div class="dropdown-menu" aria-labelledby="id_profile_links">
-                <a class="dropdown-item" href="#account">Account</a>
+                <a class="dropdown-item" href="{% url 'account:view' username=request.user.username %}">Account</a>
                 <a class="dropdown-item" href="{% url 'logout' %}">Logout</a>
               </div>
             </div>
@@ -91,7 +91,7 @@
                   src="{{ request.user.profile_image.url }}"
                   alt="account logo" width="40" height="40"/>
               <div class="dropdown-menu" aria-labelledby="id_profile_links">
-                <a class="dropdown-item" href="#account">Account</a>
+                <a class="dropdown-item" href="{% url 'account:view' username=request.user.username %}">Account</a>
                 <a class="dropdown-item" href="{% url 'logout' %}">Logout</a>
               </div>
             </div>

@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.conf import settings
-from django.urls import path
+from django.urls import path, include
 from django.contrib.auth import views as auth_views
 from django.conf.urls.static import static
 
@@ -29,6 +29,7 @@ urlpatterns = [
     path("logout/", logout_view, name="logout"),
     path("login/", login_view, name="login"),
     path('admin/', admin.site.urls),
+    path("account/", include("account.urls", namespace="account")),
     path("", home_screen_view, name="home"),
 ]
 
