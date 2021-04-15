@@ -1,4 +1,5 @@
 from django.http import HttpResponse, HttpResponseNotFound
+from django.db.models import Q
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, authenticate, logout
 
@@ -77,3 +78,22 @@ def account_view(request, username):
     return render(request, "account/account.html",
                   {"account": account, "is_self": is_self,
                    "is_friend": is_friend})
+
+
+def account_search_view(request):
+    """View to search accounts"""
+
+    ctx = {}
+    if request.method == "GET":
+        search_query = request.GET.get("q")
+        if len(search_query) > 0:
+            search_results = Account.objects.filter(
+                Q(email__icontains=search_query),
+                Q(username__icontains=search_query)
+            ).only("id", "email", "username", "profile_image").distinct()
+
+            # [(account1: Account, friend_or_not: bool), ...]
+            accounts = [(account, False) for account in search_results]
+            ctx["accounts"] = accounts
+
+    return render(request, "account/account_search.html", ctx)

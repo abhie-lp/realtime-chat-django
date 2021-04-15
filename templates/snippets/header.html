@@ -7,8 +7,8 @@
       <a href="{% url 'home' %}" class="p-2 text-dark">Home</a>
     </h5>
 
-    <form class="search-bar justify-content-start">
-      <input type="text" class="form-control" name="q" id="id_q_large" placeholder="Search....">
+    <form class="search-bar justify-content-start" action="{% url 'account:search' %}">
+      <input type="text" class="form-control" name="q" id="id_q_large" placeholder="Search...." required>
     </form>
 
     <div class="d-flex flex-row flex-row-reverse flex-grow-1">
@@ -72,8 +72,8 @@
       <a class="p-2 text-dark" href="{% url 'home' %}">Home</a>
     </h5>
 
-    <form class="search-bar justify-content-start">
-      <input type="text" class="form-control" name="q" id="id_q_small" placeholder="Search....">
+    <form class="search-bar justify-content-start" action="{% url 'account:search' %}">
+      <input type="text" class="form-control" name="q" id="id_q_small" placeholder="Search...." required>
     </form>
 
     <div class="d-flex flex-row-reverse flex-grow-1">
