@@ -1,4 +1,4 @@
-from django.http import HttpResponse, Http404
+from django.http import HttpResponse, HttpResponseNotFound
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, authenticate, logout
 
@@ -65,7 +65,7 @@ def account_view(request, username):
     try:
         account = Account.objects.get(username=username)
     except Account.DoesNotExist:
-        return Http404("The user doesn't exist.")
+        return HttpResponseNotFound("The user doesn't exist.")
     else:
         request_user = request.user
         is_self, is_friend = True, False
