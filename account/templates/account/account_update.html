@@ -50,14 +50,16 @@
               <span id="id_confirm" class="material-icons">check</span>
             </div>
             <div class="image-container" id="id_image_container">
-              <img class="border border-dark rounded-circle img-fluid mx-auto profile-image" id="id_profile_image"
+              <img class="border border-dark rounded-circle img-fluid mx-auto profile-image"
+                   id="id_profile_image_display"
                    src="{{ form.initial.profile_image.url }}" alt="logo">
               <div class="middle" id="id_middle_container">
                 <div class="text" id="id_text">Edit</div>
               </div>
             </div>
-            <form class="form-signin" method="post">{% csrf_token %}
-              <input class="d-none" type="file" id="id_profile_image_file_selector" name="profile_image_file_selector"
+            <form class="form-signin" method="post" enctype="multipart/form-data">
+              {% csrf_token %}
+              <input class="d-none" type="file" id="id_profile_image" name="profile_image"
                      onchange="readURL(this)">
               <h6 class="mt-4 field-heading">Email</h6>
               <input type="email" name="email" id="id_input_email" class="form-control" placeholder="Email address"
@@ -107,23 +109,33 @@
 
     enableImageOverlay();
 
-    function readURL(imageUrl) {
+    function readURL(input) {
+      if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function (event) {
+          disableImageOverlay();
 
+          const image = event.target.result;
+          const imageField = document.getElementById("id_profile_image_display");
+          imageField.src = image;
+        };
+
+        reader.readAsDataURL(input.files[0]);
+      }
     }
 
     function enableImageOverlay() {
       /*
       Enable the EDIT button when mouse hovers over the profile image
        */
-      console.log("Function running")
-      let text = document.getElementById("id_text")
+      const text = document.getElementById("id_text")
       text.style.backgroundColor = "#0066ff";
       text.style.color = "white";
       text.style.fontSize = "16px";
       text.style.padding = "16px 32px";
       text.style.cursor = "pointer";
 
-      let profileImage = document.getElementById("id_profile_image");
+      const profileImage = document.getElementById("id_profile_image");
       profileImage.style.opacity = "1";
       profileImage.style.display = "block";
       profileImage.style.widows = "100%";
@@ -132,27 +144,75 @@
       profileImage.style.backfaceVisibility = "hidden";
       profileImage.style.cursor = "pointer";
 
-      let middleContainer = document.getElementById("id_middle_container");
-      middleContainer.style.transition = ".5s ease";
+      const middleContainer = document.getElementById("id_middle_container");
       middleContainer.style.opacity = "0";
       middleContainer.style.position = "absolute";
       middleContainer.style.top = "50%";
       middleContainer.style.left = "50%";
       middleContainer.style.transform = "translate(-50%, -50%)";
 
-      let imageContainer = document.getElementById("id_image_container");
-      imageContainer.addEventListener("mouseover", function(event) {
+      const imageContainer = document.getElementById("id_image_container");
+      imageContainer.addEventListener("mouseover", function (event) {
         profileImage.style.opacity = "0.3";
         middleContainer.style.opacity = "1";
       });
 
-      imageContainer.addEventListener("mouseout", function(event) {
+      imageContainer.addEventListener("mouseout", function (event) {
         profileImage.style.opacity = "1";
         middleContainer.style.opacity = "0";
       });
 
-      imageContainer.addEventListener("click", function(event) {
+      imageContainer.addEventListener("click", function (event) {
         document.getElementById("id_profile_image").click();
+      })
+
+      const cropConfirm = document.getElementById("id_image_crop_confirm");
+      cropConfirm.classList.remove("d-flex")
+      cropConfirm.classList.remove("flex-row")
+      cropConfirm.classList.remove("justify-content-between");
+      cropConfirm.classList.add("d-none");
+
+    }
+
+    function disableImageOverlay() {
+      const profileImage = document.getElementById("id_profile_image_display");
+      const middleContainer = document.getElementById("id_middle_container");
+      const imageContainer = document.getElementById("id_image_container");
+      const text = document.getElementById("id_text");
+
+      imageContainer.removeEventListener("mouseover", () => {
+      });
+
+      imageContainer.removeEventListener("mouseout", () => {
+      })
+
+      profileImage.style.opacity = "1";
+      middleContainer.style.opacity = "0";
+      text.style.cursor = "default";
+      text.style.opacity = "0";
+
+      imageContainer.removeEventListener("click", () => {
+      })
+
+      document.getElementById("id_profile_image").addEventListener("click", function (event) {
+        event.preventDefault();
+      });
+
+      const cropConfirm = document.getElementById("id_image_crop_confirm");
+      cropConfirm.classList.add("d-flex")
+      cropConfirm.classList.add("flex-row")
+      cropConfirm.classList.add("justify-content-between");
+      cropConfirm.classList.remove("d-none");
+
+      const confirm = document.getElementById("id_confirm");
+      confirm.addEventListener("click", function (event) {
+        enableImageOverlay();
+      })
+
+      let cancel = document.getElementById("id_cancel");
+      cancel.addEventListener("click", function (event) {
+        console.log("reloading window...");
+        window.location.reload();
       })
     }
   </script>
