@@ -155,3 +155,10 @@ AUTHENTICATION_BACKENDS = (
 if DEBUG:
     AUTH_PASSWORD_VALIDATORS = []
     EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+
+
+LOGIN_URL = "/login/"
+LOGOUT_REDIRECT_URL = "/login/"
+
+# Max size of the image 5 MB
+DATA_UPLOAD_MAX_MEMORY_SIZE = 5_242_880
