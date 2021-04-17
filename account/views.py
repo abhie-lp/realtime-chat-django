@@ -106,8 +106,11 @@ def account_update_view(request):
     """View to updated account details"""
     ctx = {"DATA_UPLOAD_MAX_SIZE": settings.DATA_UPLOAD_MAX_MEMORY_SIZE}
     if request.method == "POST":
-        form = AccountUpdateForm(request.POST, instance=request.user)
+        form = AccountUpdateForm(
+            request.POST, request.FILES, instance=request.user
+        )
         if form.is_valid():
+            Account.objects.get(id=request.user.id).profile_image.delete()
             form.save()
             return redirect("account:view", request.user.username)
     else:
