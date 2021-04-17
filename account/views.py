@@ -1,9 +1,11 @@
+from django.conf import settings
 from django.http import HttpResponse, HttpResponseNotFound
 from django.db.models import Q
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, authenticate, logout
+from django.contrib.auth.decorators import login_required
 
-from .forms import RegistrationForm, LoginForm
+from .forms import RegistrationForm, LoginForm, AccountUpdateForm
 from .models import Account
 
 
@@ -97,3 +99,18 @@ def account_search_view(request):
             ctx["accounts"] = accounts
 
     return render(request, "account/account_search.html", ctx)
+
+
+@login_required()
+def account_update_view(request):
+    """View to updated account details"""
+    ctx = {"DATA_UPLOAD_MAX_SIZE": settings.DATA_UPLOAD_MAX_MEMORY_SIZE}
+    if request.method == "POST":
+        form = AccountUpdateForm(request.POST, instance=request.user)
+        if form.is_valid():
+            form.save()
+            return redirect("account:view", request.user.username)
+    else:
+        form = AccountUpdateForm(instance=request.user)
+    ctx["form"] = form
+    return render(request, "account/account_update.html", ctx)

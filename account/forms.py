@@ -2,7 +2,6 @@
 
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
-from django.contrib.auth import authenticate
 
 from account.models import Account
 
@@ -40,3 +39,11 @@ class LoginForm(forms.Form):
     """Create a login form"""
     password = forms.CharField(label="Password", widget=forms.PasswordInput)
     email = forms.EmailField(label="Email")
+
+
+class AccountUpdateForm(forms.ModelForm):
+    """Form to update user account details"""
+
+    class Meta:
+        model = Account
+        fields = ("username", "email", "profile_image", "hide_email")
