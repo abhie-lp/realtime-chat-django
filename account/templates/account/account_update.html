@@ -35,7 +35,12 @@
             <div class="image-container align-self-center" id="id_image_container">
               <img class="border border-dark rounded-circle img-fluid mx-auto profile-image"
                    id="id_profile_image_display"
-                   src="{{ form.initial.profile_image.url }}" alt="logo">
+                   {% if request.user.profile_image %}
+                     src="{{ form.initial.profile_image.url }}"
+                   {% else %}
+                     src="{% static 'images/dummy_image.png' %}"
+                   {% endif %}
+                   alt="logo">
             </div>
             <div class="middle text-center mt-4" id="id_middle_container">
               <div class="btn btn-outline-danger w-25 mr-3" id="id-cancel-upload">Cancel</div>
@@ -118,6 +123,7 @@
     const imageDisplay = document.getElementById("id_profile_image_display");
     const confirmCrop = document.getElementById("id-confirm-crop");
     const cancelCrop = document.getElementById("id-cancel-crop");
+    const cancelUpload = document.getElementById("id-cancel-upload");
     const cropSection = document.getElementById("id-crop-section");
     const editButton = document.getElementById("id_text");
 
@@ -178,6 +184,10 @@
     cancelCrop.addEventListener("click", event => {
       cropper.destroy();
       cropper = null;
+    })
+
+    cancelUpload.addEventListener("click", event => {
+      window.location.reload();
     })
 
   </script>

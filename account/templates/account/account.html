@@ -91,7 +91,12 @@
           <div class="d-flex flex-column justify-content-center p-4">
             <div class="image-container mx-auto mb-4">
               <img class="d-block border border-dark rounded-circle img-fluid mx-auto profile-image"
-                   alt="logo" id="id_profile_image" src="{{ account.profile_image.url }}"
+                   alt="logo" id="id_profile_image"
+                   {% if account.profile_image %}
+                    src="{{ account.profile_image.url }}"
+                  {% else %}
+                    src="{% static 'images/dummy_image.png' %}"
+                  {% endif %}
                    style="width: 350px; height: 350px"
               >
             </div>
@@ -223,9 +228,6 @@
 
 {% block page_script %}
   <script type="text/javascript">
-
-    // called from base_js.html
-    //preloadImage("{{account.profile_image.url|safe}}", 'id_profile_image')
 
     function onFriendRequestSent() {
       location.reload();

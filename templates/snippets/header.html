@@ -48,7 +48,12 @@
                   data-toggle="dropdown"
                   aria-haspopup="true"
                   aria-expanded="false"
-                  src="{{ request.user.profile_image.url }}" alt="account logo" width="40" height="40"/>
+                  {% if request.user.profile_image %}
+                    src="{{ request.user.profile_image.url }}"
+                  {% else %}
+                    src="{% static 'images/dummy_image.png' %}"
+                  {% endif %}
+                  alt="account logo" width="40" height="40"/>
               <div class="dropdown-menu" aria-labelledby="id_profile_links">
                 <a class="dropdown-item" href="{% url 'account:view' username=request.user.username %}">Account</a>
                 <a class="dropdown-item" href="{% url 'logout' %}">Logout</a>
@@ -88,7 +93,11 @@
                   data-toggle="dropdown"
                   aria-haspopup="true"
                   aria-expanded="false"
-                  src="{{ request.user.profile_image.url }}"
+                  {% if request.user.profile_image %}
+                    src="{{ request.user.profile_image.url }}"
+                  {% else %}
+                    src="{% static 'images/dummy_image.png' %}"
+                  {% endif %}
                   alt="account logo" width="40" height="40"/>
               <div class="dropdown-menu" aria-labelledby="id_profile_links">
                 <a class="dropdown-item" href="{% url 'account:view' username=request.user.username %}">Account</a>
