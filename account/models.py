@@ -1,4 +1,5 @@
 from os import path
+from datetime import datetime
 
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, \
@@ -32,14 +33,11 @@ class MyAccountManager(BaseUserManager):
         return user
 
 
-def get_profile_image_filepath(self, _):
+def get_profile_image_filepath(self, filename: str):
     """Return the profile image path for the user"""
-    return f"profile_images/{self.pk}/profile_image.png"
-
-
-def get_default_profile_image():
-    """Return the path  of default profile image"""
-    return "defaults/logo.jpg"
+    return f"profile_images/{self.username}/" \
+           f"profile_image-{datetime.now().strftime('%Y-%m-%d_%H_%M')}" \
+           f".{filename.rsplit('.', 1)[1]}"
 
 
 class Account(AbstractBaseUser):
@@ -54,8 +52,7 @@ class Account(AbstractBaseUser):
     is_superuser = models.BooleanField(default=False)
     profile_image = models.ImageField(
         max_length=255,  null=True, blank=True,
-        upload_to=get_profile_image_filepath,
-        default=get_default_profile_image
+        upload_to=get_profile_image_filepath
     )
     hide_email = models.BooleanField(default=True)
 

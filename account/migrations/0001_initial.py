@@ -25,7 +25,7 @@ class Migration(migrations.Migration):
                 ('is_active', models.BooleanField(default=True)),
                 ('is_staff', models.BooleanField(default=False)),
                 ('is_superuser', models.BooleanField(default=False)),
-                ('profile_image', models.ImageField(blank=True, default=account.models.get_default_profile_image, max_length=255, null=True, upload_to=account.models.get_default_profile_image)),
+                ('profile_image', models.ImageField(blank=True, max_length=255, null=True, upload_to=account.models.get_profile_image_filepath)),
                 ('hide_email', models.BooleanField(default=True)),
             ],
             options={
