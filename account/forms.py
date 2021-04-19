@@ -57,8 +57,9 @@ class AccountUpdateForm(forms.ModelForm):
 
     def save(self, commit=True):
         """Override save to resized image"""
-        account = super(AccountUpdateForm, self).save(commit=commit)
         if self.cleaned_data["upload_image"]:
+            Account.objects.get(pk=self.instance.pk).profile_image.delete()
+            account = super(AccountUpdateForm, self).save(commit=commit)
             x = self.cleaned_data["x"]
             y = self.cleaned_data["y"]
             width = self.cleaned_data["width"]
@@ -67,6 +68,8 @@ class AccountUpdateForm(forms.ModelForm):
             image = Image.open(account.profile_image)
             cropped_image = image.crop((x, y, width + x, height + y))
             cropped_image.save(
-                account.profile_image.path, optimize=True, quality=75
+                account.profile_image.path, optimize=True, quality=85
             )
+        else:
+            account = super(AccountUpdateForm, self).save(commit=commit)
         return account
