@@ -19,29 +19,27 @@ class FriendList(models.Model):
 
     def add_friend(self, account):
         """Add friend if not in friend list"""
-        if account not in self.friends.all():
-            self.friends.add(account)
+        self.friends.add(account)
 
     def remove_friend(self, account):
         """Remove friend if exists in friend list"""
-        if account in self.friends.all():
-            self.friends.remove(account)
+        self.friends.remove(account)
 
-    def unfriend(self, remover):
+    def unfriend(self, friend_to_unfriend):
         """
-        Handle unfriend initiated by remover.
+        Handle unfriend initiated by user.
         Remove users from each others friend list.
         """
 
         # Remove remover from user's friend list
-        self.remove_friend(remover)
+        self.remove_friend(friend_to_unfriend)
 
         # Remove user from remover's friend list
-        FriendList.objects.get(user=remover).remove_friend(self.user)
+        friend_to_unfriend.friend_list.remove_friend(self.user)
 
     def is_friend(self, user):
         """Check if user is already friend"""
-        return user in self.friends.all()
+        return user.pk in self.friends.values_list("pk", flat=True)
 
 
 class FriendRequest(models.Model):
