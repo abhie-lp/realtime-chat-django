@@ -92,10 +92,10 @@
             <div class="image-container mx-auto mb-4">
               <img class="d-block border border-dark rounded-circle img-fluid mx-auto profile-image"
                    alt="logo" id="id_profile_image"
-                   {% if account.profile_image %}
-                    src="{{ account.profile_image.url }}"
+                  {% if account.profile_image %}
+                   src="{{ account.profile_image.url }}"
                   {% else %}
-                    src="{% static 'images/dummy_image.png' %}"
+                   src="{% static 'images/dummy_image.png' %}"
                   {% endif %}
                    style="width: 350px; height: 350px"
               >
@@ -128,7 +128,7 @@
         <div class="d-flex flex-column mb-4">
 
           <!-- THEM to YOU -->
-          {% if request_sent == 0 %}
+          {% if request_status == "RECEIVED" %}
             <div class="card m-2 p-4">
               <div class="d-flex flex-row align-items-center">
                 <span class="friend-text align-items-center mr-2">Accept Friend Request</span>
@@ -144,7 +144,7 @@
             <!-- Cancel Friend Request / Send Friend Request / Remove Friend -->
             {% if is_friend == False and is_self == False %}
               <!-- You sent them a request -->
-              {% if request_sent == 1 %}
+              {% if request_status == "SENT" %}
                 <div class="d-flex flex-column align-items-center pt-4">
                   <button class="btn btn-danger" id="id_cancel_friend_request_btn">
                     Cancel Friend Request
@@ -152,7 +152,7 @@
                 </div>
               {% endif %}
               <!-- No requests have been sent -->
-              {% if request_sent == -1 %}
+              {% if request_status == None %}
                 <div class="d-flex flex-column align-items-center pt-4">
                   <button class="btn btn-primary" id="id_send_friend_request_btn">
                     Send Friend Request
@@ -169,7 +169,8 @@
                   Friends
                 </button>
                 <div class="dropdown-menu" aria-labelledby="id_friends_toggle">
-                  <a class="dropdown-item" href="#" onclick="removeFriend('{{ account.id }}', onFriendRemoved)">Unfriend</a>
+                  <a class="dropdown-item" href="#"
+                     onclick="removeFriend('{{ account.id }}', onFriendRemoved)">Unfriend</a>
                 </div>
               </div>
             {% endif %}
@@ -179,7 +180,8 @@
             <div class="d-flex flex-column pt-4">
               <a href="#">
                 <div class="d-flex flex-row align-items-center justify-content-center icon-container">
-                  <span class="material-icons mr-2 friends-icon">contact_page</span><span class="friend-text">Friends (0)</span>
+                  <span class="material-icons mr-2 friends-icon">contact_page</span><span
+                    class="friend-text">Friends ({{ friends_count }})</span>
                 </div>
               </a>
             </div>
@@ -187,25 +189,23 @@
           </div>
 
           <!-- TODO -->
-          {#% if friend_requests %#}
-          <div class="card m-2 px-4 pb-4">
-            <!-- Friend requests -->
-            <div class="d-flex flex-column pt-4">
-              <a href="#">
-                <div class="d-flex flex-row align-items-center justify-content-center icon-container">
-                  <span class="material-icons mr-2 person-add-icon">person_add</span><span class="friend-text">Friend Requests (0)</span>
-                </div>
-              </a>
+          {% if is_self %}
+            <div class="card m-2 px-4 pb-4">
+              <!-- Friend requests -->
+              <div class="d-flex flex-column pt-4">
+                <a href="#">
+                  <div class="d-flex flex-row align-items-center justify-content-center icon-container">
+                    <span class="material-icons mr-2 person-add-icon">person_add</span><span class="friend-text">Friend Requests ({{ friend_requests }})</span>
+                  </div>
+                </a>
+              </div>
             </div>
-          </div>
-          {#% endif %#}
+          {% endif %}
 
           {% if is_friend %}
             <div class="d-flex flex-row align-items-center btn btn-primary m-2 px-4"
                  onclick="createOrReturnPrivateChat('{{ account.username }}')">
-					<span class="material-icons m-auto">
-					message
-					</span>
+              <span class="material-icons m-auto">message</span>
               <span class="message-btn-text m-auto pl-2">Message</span>
             </div>
           {% endif %}

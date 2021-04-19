@@ -8,6 +8,8 @@ from django.contrib.auth.decorators import login_required
 from .forms import RegistrationForm, LoginForm, AccountUpdateForm
 from .models import Account
 
+from friends.models import FriendRequest
+
 
 def register_view(request):
     """View to register new user"""
@@ -71,15 +73,42 @@ def account_view(request, username):
         return HttpResponseNotFound("The user doesn't exist.")
     else:
         request_user = request.user
-        is_self, is_friend = True, False
+        is_friend, request_status, friend_requests = False, None, None
 
-        if request_user.is_authenticated and request_user != account:
-            is_self = False
-        elif not request_user.is_authenticated:
-            is_self = False
-    return render(request, "account/account.html",
-                  {"account": account, "is_self": is_self,
-                   "is_friend": is_friend})
+        # Check if client-user is logged-in and is seeing self account
+        is_self = request_user.is_authenticated and request_user == account
+
+        if request_user.is_authenticated and not is_self:
+            # Check if client user is friend with account opened
+            is_friend = request_user.friend_list.is_friend(account)
+            if not is_friend:
+                # Check if friend request has been sent by any of them
+                friend_request: FriendRequest = FriendRequest.objects.filter(
+                    Q(sender=request_user, receiver=account) |
+                    Q(sender=account, receiver=request_user),
+                    is_active=True
+                ).last()
+                if friend_request:
+                    # Check if request is sent by sign-in user to other account
+                    if friend_request.sender == request_user and \
+                            friend_request.receiver == account:
+                        request_status = "SENT"
+                    # Check if request is received by sign-in user from other
+                    # account
+                    elif friend_request.sender == account and \
+                            friend_request.receiver == request_user:
+                        request_status = "RECEIVED"
+        elif is_self:
+            friend_requests = request_user.requests_received.count()
+        ctx = {
+            "account": account,
+            "is_self": is_self,
+            "is_friend":  is_friend,
+            "request_status": request_status,
+            "friends_count": account.friends.count(),
+            "friend_requests": friend_requests
+        }
+    return render(request, "account/account.html", ctx)
 
 
 def account_search_view(request):
@@ -90,7 +119,7 @@ def account_search_view(request):
         search_query = request.GET.get("q")
         if len(search_query) > 0:
             search_results = Account.objects.filter(
-                Q(email__icontains=search_query),
+                Q(email__icontains=search_query) |
                 Q(username__icontains=search_query)
             ).only("id", "email", "username", "profile_image").distinct()
 

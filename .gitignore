@@ -5,3 +5,4 @@ static_cdn
 media_cdn/*
 !media_cdn/defaults
 media
+t_script*.py
