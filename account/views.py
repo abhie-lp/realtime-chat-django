@@ -110,7 +110,6 @@ def account_update_view(request):
             request.POST, request.FILES, instance=request.user
         )
         if form.is_valid():
-            Account.objects.get(id=request.user.id).profile_image.delete()
             form.save()
             return redirect("account:view", request.user.username)
     else:

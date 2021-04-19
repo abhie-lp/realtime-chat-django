@@ -2,39 +2,26 @@
 {% load static %}
 
 {% block page_style %}
+  <link rel="stylesheet" href="{% static 'cropperjs/dist/cropper.min.css' %}"/>
   <style type="text/css">
     .image-container {
-      max-width: 250px;
+      max-width: 390px;
       height: auto;
-      position: relative;
     }
 
     .field-heading {
       color: #737373;
     }
 
-    #id_confirm {
-      color: green;
+    #id-crop-section {
+      width: 96%;
+      height: 450px;
+      position: relative;
     }
 
-    #id_confirm:hover {
-      opacity: 0.3;
-    }
-
-    #id_cancel:hover {
-      opacity: 0.3;
-    }
-
-    #id_cancel {
-      color: red;
-    }
-
-    .material-icons {
-      font-size: 30px;
-    }
-
-    .material-icons:hover {
-      cursor: pointer;
+    #id-crop-section img {
+      width: 96%;
+      height: 450px;
     }
   </style>
 {% endblock page_style %}
@@ -42,25 +29,23 @@
 {% block content %}
   <div class="container-fluid">
     <div class="row justify-content-center">
-      <div class="card profile-card">
+      <div class="card profile-card" style="width: 400px">
         <div class="card-body">
           <div class="d-flex flex-column justify-content-center p-4">
-            <div class="mb-2" id="id_image_crop_confirm">
-              <span id="id_cancel" class="material-icons">cancel</span>
-              <span id="id_confirm" class="material-icons">check</span>
-            </div>
-            <div class="image-container" id="id_image_container">
+            <div class="image-container align-self-center" id="id_image_container">
               <img class="border border-dark rounded-circle img-fluid mx-auto profile-image"
                    id="id_profile_image_display"
                    src="{{ form.initial.profile_image.url }}" alt="logo">
-              <div class="middle" id="id_middle_container">
-                <div class="text" id="id_text">Edit</div>
-              </div>
+            </div>
+            <div class="middle text-center mt-4" id="id_middle_container">
+              <div class="btn btn-outline-danger w-25 mr-3" id="id-cancel-upload">Cancel</div>
+              <div class="btn btn-outline-primary w-25 ml-3" id="id_text">Edit</div>
             </div>
             <form class="form-signin" method="post" enctype="multipart/form-data">
               {% csrf_token %}
               <input class="d-none" type="file" id="id_profile_image" name="profile_image"
                      onchange="readURL(this)">
+              {{ form.x }} {{ form.y }} {{ form.width }} {{ form.height }} {{ form.upload_image }}
               <h6 class="mt-4 field-heading">Email</h6>
               <input type="email" name="email" id="id_input_email" class="form-control" placeholder="Email address"
                      required autofocus value={{ form.initial.email }}>
@@ -94,10 +79,27 @@
               <div class="d-flex flex-column mt-4">
                 <button class="mt-4 btn btn-primary flex-grow-1" type="submit">Save</button>
               </div>
-
             </form>
-
           </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="id-edit-modal" class="modal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Crop the image</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div id="id-crop-section" class="modal-body">
+          <p>Modal body text goes here.</p>
+        </div>
+        <div class="modal-footer mt-2">
+          <button id="id-cancel-crop" type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          <button id="id-confirm-crop" type="button" class="btn btn-primary" data-dismiss="modal">Confirm</button>
         </div>
       </div>
     </div>
@@ -105,115 +107,78 @@
 {% endblock content %}
 
 {% block page_script %}
+  <script type="module" src="{% static 'cropperjs/dist/cropper.min.js' %}"></script>
   <script type="text/javascript">
+    let cropper;
+    let cropX = document.getElementById("id_x");
+    let cropY = document.getElementById("id_y");
+    let cropWidth = document.getElementById("id_width");
+    let cropHeight = document.getElementById("id_height");
 
-    enableImageOverlay();
+    const imageDisplay = document.getElementById("id_profile_image_display");
+    const confirmCrop = document.getElementById("id-confirm-crop");
+    const cancelCrop = document.getElementById("id-cancel-crop");
+    const cropSection = document.getElementById("id-crop-section");
+    const editButton = document.getElementById("id_text");
 
-    function readURL(input) {
+    editButton.addEventListener("click", (event) => {
+      document.getElementById('id_profile_image').click();
+    })
+
+    const setImageCropProperties = (x, y, width, height) => {
+      console.log("x =", x, "y =", y, "width =", width, "height =", height);
+      cropX.value = x;
+      cropY.value = y;
+      cropWidth.value = width;
+      cropHeight.value = height;
+    }
+
+    const readURL = input => {
       if (input.files && input.files[0]) {
         const reader = new FileReader();
-        reader.onload = function (event) {
-          disableImageOverlay();
 
-          const image = event.target.result;
-          const imageField = document.getElementById("id_profile_image_display");
-          imageField.src = image;
-        };
+        reader.onload = e => {
+          if (input.files[0].size <= Number.parseInt("{{ DATA_UPLOAD_MAX_SIZE }}")) {
+            const img = document.createElement("img");
+            img.id = "id-image-cropper";
+            img.src = e.target.result;
+            cropSection.innerHTML = "";
+            cropSection.appendChild(img);
+            cropper = new Cropper(img, {
+              aspectRatio: 1 / 1,
+              viewMode: 1,
+              crop(event) {
+                setImageCropProperties(
+                  event.detail.x,
+                  event.detail.y,
+                  event.detail.width,
+                  event.detail.height
+                )
+              }
+            });
+            $("#id-edit-modal").modal("show");
+          } else {
+            alert("Selected file is greater than " + (Number.parseInt("{{ DATA_UPLOAD_MAX_SIZE }}") / 1024) / 1024 + " MB");
+            document.getElementById("id_profile_image").value = "";
+          }
+        }
 
-        reader.readAsDataURL(input.files[0]);
+        reader.readAsDataURL(input.files[0])
       }
     }
 
-    function enableImageOverlay() {
-      /*
-      Enable the EDIT button when mouse hovers over the profile image
-       */
-      const text = document.getElementById("id_text")
-      text.style.backgroundColor = "#0066ff";
-      text.style.color = "white";
-      text.style.fontSize = "16px";
-      text.style.padding = "16px 32px";
-      text.style.cursor = "pointer";
+    confirmCrop.addEventListener("click", (event) => {
+      const imgSrc = cropper.getCroppedCanvas().toDataURL();
+      imageDisplay.src = imgSrc;
+      document.getElementById("id_upload_image").value = "1";
+      cropper.destroy();
+      cropper = null;
+    })
 
-      const profileImage = document.getElementById("id_profile_image");
-      profileImage.style.opacity = "1";
-      profileImage.style.display = "block";
-      profileImage.style.widows = "100%";
-      profileImage.style.height = "auto";
-      profileImage.style.transition = ".5s ease";
-      profileImage.style.backfaceVisibility = "hidden";
-      profileImage.style.cursor = "pointer";
+    cancelCrop.addEventListener("click", event => {
+      cropper.destroy();
+      cropper = null;
+    })
 
-      const middleContainer = document.getElementById("id_middle_container");
-      middleContainer.style.opacity = "0";
-      middleContainer.style.position = "absolute";
-      middleContainer.style.top = "50%";
-      middleContainer.style.left = "50%";
-      middleContainer.style.transform = "translate(-50%, -50%)";
-
-      const imageContainer = document.getElementById("id_image_container");
-      imageContainer.addEventListener("mouseover", function (event) {
-        profileImage.style.opacity = "0.3";
-        middleContainer.style.opacity = "1";
-      });
-
-      imageContainer.addEventListener("mouseout", function (event) {
-        profileImage.style.opacity = "1";
-        middleContainer.style.opacity = "0";
-      });
-
-      imageContainer.addEventListener("click", function (event) {
-        document.getElementById("id_profile_image").click();
-      })
-
-      const cropConfirm = document.getElementById("id_image_crop_confirm");
-      cropConfirm.classList.remove("d-flex")
-      cropConfirm.classList.remove("flex-row")
-      cropConfirm.classList.remove("justify-content-between");
-      cropConfirm.classList.add("d-none");
-
-    }
-
-    function disableImageOverlay() {
-      const profileImage = document.getElementById("id_profile_image_display");
-      const middleContainer = document.getElementById("id_middle_container");
-      const imageContainer = document.getElementById("id_image_container");
-      const text = document.getElementById("id_text");
-
-      imageContainer.removeEventListener("mouseover", () => {
-      });
-
-      imageContainer.removeEventListener("mouseout", () => {
-      })
-
-      profileImage.style.opacity = "1";
-      middleContainer.style.opacity = "0";
-      text.style.cursor = "default";
-      text.style.opacity = "0";
-
-      imageContainer.removeEventListener("click", () => {
-      })
-
-      document.getElementById("id_profile_image").addEventListener("click", function (event) {
-        event.preventDefault();
-      });
-
-      const cropConfirm = document.getElementById("id_image_crop_confirm");
-      cropConfirm.classList.add("d-flex")
-      cropConfirm.classList.add("flex-row")
-      cropConfirm.classList.add("justify-content-between");
-      cropConfirm.classList.remove("d-none");
-
-      const confirm = document.getElementById("id_confirm");
-      confirm.addEventListener("click", function (event) {
-        enableImageOverlay();
-      })
-
-      let cancel = document.getElementById("id_cancel");
-      cancel.addEventListener("click", function (event) {
-        console.log("reloading window...");
-        window.location.reload();
-      })
-    }
   </script>
 {% endblock page_script %}
