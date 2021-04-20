@@ -16,9 +16,8 @@ from friends.models import FriendRequest
 @permission_classes([IsAuthenticated])
 def send_friend_request_view(request):
     """View to send friend request to other account."""
-    print(request.POST.get("receiver_username"))
     receiver_account = get_object_or_404(
-        Account, username=request.POST.get("receiver_username")
+        Account, username=request.data.get("receiver_username")
     )
     try:
         FriendRequest.objects.get(
