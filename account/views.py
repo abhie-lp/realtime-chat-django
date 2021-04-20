@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.dispatch import receiver
 from django.http import HttpResponse, HttpResponseNotFound
 from django.db.models import Q
 from django.shortcuts import render, redirect
@@ -99,7 +100,9 @@ def account_view(request, username):
                             friend_request.receiver == request_user:
                         request_status = "RECEIVED"
         elif is_self:
-            friend_requests = request_user.requests_received.count()
+            friend_requests = FriendRequest.objects.filter(
+                receiver=request_user, is_active=True
+            ).count()
         ctx = {
             "account": account,
             "is_self": is_self,
