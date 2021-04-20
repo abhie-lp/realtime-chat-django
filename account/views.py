@@ -1,5 +1,4 @@
 from django.conf import settings
-from django.dispatch import receiver
 from django.http import HttpResponse, HttpResponseNotFound
 from django.db.models import Q
 from django.shortcuts import render, redirect
@@ -75,6 +74,7 @@ def account_view(request, username):
     else:
         request_user = request.user
         is_friend, request_status, friend_requests = False, None, None
+        pending_friend_request_id = None
 
         # Check if client-user is logged-in and is seeing self account
         is_self = request_user.is_authenticated and request_user == account
@@ -99,6 +99,7 @@ def account_view(request, username):
                     elif friend_request.sender == account and \
                             friend_request.receiver == request_user:
                         request_status = "RECEIVED"
+                    pending_friend_request_id = friend_request.pk
         elif is_self:
             friend_requests = FriendRequest.objects.filter(
                 receiver=request_user, is_active=True
@@ -109,7 +110,8 @@ def account_view(request, username):
             "is_friend":  is_friend,
             "request_status": request_status,
             "friends_count": account.friends.count(),
-            "friend_requests": friend_requests
+            "friend_requests": friend_requests,
+            "pending_friend_request_id": pending_friend_request_id
         }
     return render(request, "account/account.html", ctx)
 
