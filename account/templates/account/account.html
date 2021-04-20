@@ -170,7 +170,7 @@
                 </button>
                 <div class="dropdown-menu" aria-labelledby="id_friends_toggle">
                   <a class="dropdown-item" href="#"
-                     onclick="removeFriend('{{ account.id }}', onFriendRemoved)">Unfriend</a>
+                     onclick="removeFriend('{{ account.username }}', onFriendRemoved)">Unfriend</a>
                 </div>
               </div>
             {% endif %}
@@ -219,11 +219,11 @@
 {% endblock content %}
 
 {% block page_script %}
-  {% include 'snippets/send_friend_request.html' %}
-  {#% include 'snippets/accept_friend_request.html' %#}
+  {% include 'account/snippets/send_friend_request.html' %}
+  {% include 'friends/snippets/accept_friend_request.html' %}
   {#% include 'snippets/decline_friend_request.html' %#}
   {#% include 'snippets/cancel_friend_request.html' %#}
-  {#% include 'snippets/remove_friend.html' %#}
+  {% include 'friends/snippets/remove_friend.html' %}
   {#% include 'chat/create_or_return_private_chat.html' %#}
   <script type="text/javascript">
 
@@ -258,19 +258,19 @@
     const cancelFriendRequestBtn = document.getElementById("id_cancel_friend_request_btn")
     if (cancelFriendRequestBtn != null) {
       cancelFriendRequestBtn.addEventListener("click", function () {
-        //cancelFriendRequest("{{id}}", onFriendRequestCancelled)
+        //cancelFriendRequest("{{account.username}}", onFriendRequestCancelled)
       })
     }
 
     const removeFriendBtn = document.getElementById("id_unfriend_btn")
     if (removeFriendBtn != null) {
       removeFriendBtn.addEventListener("click", function () {
-        //removeFriend("{{id}}", onFriendRemoved)
+        removeFriend("{{account.username}}", onFriendRemoved)
       })
     }
 
     function triggerAcceptFriendRequest(friend_request_id) {
-      //acceptFriendRequest(friend_request_id, onFriendRequestAccepted)
+      acceptFriendRequest(friend_request_id, onFriendRequestAccepted)
     }
 
     function triggerDeclineFriendRequest(friend_request_id) {

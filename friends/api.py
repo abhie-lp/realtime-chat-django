@@ -9,7 +9,7 @@ from rest_framework.response import Response
 from rest_framework.status import HTTP_409_CONFLICT, HTTP_403_FORBIDDEN
 
 from account.models import Account
-from friends.models import FriendRequest
+from friends.models import FriendRequest, FriendList
 
 
 @api_view(["POST"])
@@ -47,3 +47,13 @@ def accept_friend_request_view(request, pk):
                         status=HTTP_403_FORBIDDEN)
     friend_request.accept()
     return Response("Friend request accepted.")
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def remove_friend_view(request):
+    """View to remove a friend from friend list"""
+    other_username = request.data.get("username")
+    other_account = get_object_or_404(Account, username=other_username)
+    FriendList.objects.get(user=request.user).unfriend(other_account)
+    return Response("Successfully unfriended")

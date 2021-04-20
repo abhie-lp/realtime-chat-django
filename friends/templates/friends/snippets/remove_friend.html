@@ -1,0 +1,23 @@
+<script type="text/javascript">
+  const removeFriend = (username, uiUpdateFunction) => {
+    const payload = {
+      "csrfmiddlewaretoken": "{{ csrf_token }}",
+      "username": username
+    };
+
+    $.ajax({
+      type: "POST",
+      dataType: "json",
+      timeout: 5000,
+      data: payload,
+      url: "{% url 'friends:remove_friend' %}",
+      success: (data) => {
+        console.log(data);
+        uiUpdateFunction();
+      },
+      error: (error) => {
+        console.log(error);
+      }
+    })
+  }
+</script>
