@@ -9,7 +9,7 @@
     }
 
     .field-heading {
-      color: var(--secondary-text-color);
+      color: const(--secondary-text-color);
     }
 
     .icon-container:hover {
@@ -216,17 +216,15 @@
 
     </div>
   </div>
+{% endblock content %}
 
-
-  {#% include 'snippets/send_friend_request.html' %#}
+{% block page_script %}
+  {% include 'snippets/send_friend_request.html' %}
   {#% include 'snippets/accept_friend_request.html' %#}
   {#% include 'snippets/decline_friend_request.html' %#}
   {#% include 'snippets/cancel_friend_request.html' %#}
   {#% include 'snippets/remove_friend.html' %#}
   {#% include 'chat/create_or_return_private_chat.html' %#}
-{% endblock content %}
-
-{% block page_script %}
   <script type="text/javascript">
 
     function onFriendRequestSent() {
@@ -250,21 +248,21 @@
     }
 
 
-    var sendFriendRequestBtn = document.getElementById("id_send_friend_request_btn")
+    const sendFriendRequestBtn = document.getElementById("id_send_friend_request_btn")
     if (sendFriendRequestBtn != null) {
       sendFriendRequestBtn.addEventListener("click", function () {
-        //sendFriendRequest("{{id}}", onFriendRequestSent)
+        sendFriendRequest("{{ account.username }}", onFriendRequestSent)
       })
     }
 
-    var cancelFriendRequestBtn = document.getElementById("id_cancel_friend_request_btn")
+    const cancelFriendRequestBtn = document.getElementById("id_cancel_friend_request_btn")
     if (cancelFriendRequestBtn != null) {
       cancelFriendRequestBtn.addEventListener("click", function () {
         //cancelFriendRequest("{{id}}", onFriendRequestCancelled)
       })
     }
 
-    var removeFriendBtn = document.getElementById("id_unfriend_btn")
+    const removeFriendBtn = document.getElementById("id_unfriend_btn")
     if (removeFriendBtn != null) {
       removeFriendBtn.addEventListener("click", function () {
         //removeFriend("{{id}}", onFriendRemoved)

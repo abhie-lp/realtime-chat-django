@@ -28,6 +28,7 @@ urlpatterns = [
     ), name="password_change"),
     path("logout/", logout_view, name="logout"),
     path("login/", login_view, name="login"),
+    path("friend/", include("friends.urls", namespace="friends")),
     path('admin/', admin.site.urls),
     path("account/", include("account.urls", namespace="account")),
     path("", home_screen_view, name="home"),
