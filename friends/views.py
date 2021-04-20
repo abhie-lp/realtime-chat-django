@@ -9,8 +9,8 @@ from friends.models import FriendRequest
 @login_required()
 def my_friend_requests_view(request):
     """View to show all the friend requests of a logged-in user"""
-    requests = FriendRequest.objects.filter(
+    requests = FriendRequest.objects.select_related("sender").filter(
         receiver=request.user, is_active=True
-    ).only("sender", "receiver")
+    ).only("pk", "sender__username", "sender__profile_image")
     ctx = {"friend_requests": requests}
     return render(request, "friends/friend_requests.html", ctx)
