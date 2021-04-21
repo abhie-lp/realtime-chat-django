@@ -8,7 +8,8 @@ from django.contrib.auth.decorators import login_required
 from .forms import RegistrationForm, LoginForm, AccountUpdateForm
 from .models import Account
 
-from friends.models import FriendRequest
+from friends.models import FriendRequest, FriendList
+from utils.search import binary_search
 
 
 def register_view(request):
@@ -107,7 +108,7 @@ def account_view(request, username):
         ctx = {
             "account": account,
             "is_self": is_self,
-            "is_friend":  is_friend,
+            "is_friend": is_friend,
             "request_status": request_status,
             "friends_count": account.friends.count(),
             "friend_requests": friend_requests,
@@ -120,17 +121,26 @@ def account_search_view(request):
     """View to search accounts"""
 
     ctx = {}
-    if request.method == "GET":
-        search_query = request.GET.get("q")
-        if len(search_query) > 0:
-            search_results = Account.objects.filter(
-                Q(email__icontains=search_query) |
-                Q(username__icontains=search_query)
-            ).only("id", "email", "username", "profile_image").distinct()
+    search_query = request.GET.get("q")
+    if len(search_query) > 0:
+        search_results = Account.objects.filter(
+            Q(email__icontains=search_query) |
+            Q(username__icontains=search_query)
+        ).only("id", "email", "username", "profile_image").distinct()
 
-            # [(account1: Account, friend_or_not: bool), ...]
+        # [(account1: Account, friendship_status_with_me: bool), ...]
+        if request.user.is_authenticated:
+            my_friends = tuple(
+                FriendList.objects.get(user=request.user).friends
+                .order_by("pk").values_list("pk", flat=True)
+            )
+            accounts = [
+                (account, binary_search(account.pk, my_friends))
+                for account in search_results
+            ]
+        else:
             accounts = [(account, False) for account in search_results]
-            ctx["accounts"] = accounts
+        ctx["accounts"] = accounts
 
     return render(request, "account/account_search.html", ctx)
 
