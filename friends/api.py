@@ -57,3 +57,14 @@ def remove_friend_view(request):
     other_account = get_object_or_404(Account, username=other_username)
     FriendList.objects.get(user=request.user).unfriend(other_account)
     return Response("Successfully unfriended")
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def decline_friend_request_view(request, pk):
+    """View to decline a friend request"""
+    friend_request = get_object_or_404(
+        FriendRequest, pk=pk, receiver=request.user
+    )
+    friend_request.decline()
+    return Response("Friend request declined")
