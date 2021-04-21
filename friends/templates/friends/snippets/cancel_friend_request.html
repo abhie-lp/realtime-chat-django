@@ -1,0 +1,18 @@
+<script type="text/javascript">
+  const cancelFriendRequest = (id, uiUpdateFunction) => {
+    const url = "{% url 'friends:cancel_request' pk=99999999 %}".replace("99999999", id);
+    $.ajax({
+      type: "GET",
+      dataType: "json",
+      url: url,
+      timeout: 5000,
+      success: (data) => {
+        console.log(data);
+        uiUpdateFunction();
+      },
+      error: (error) => {
+        console.log(error);
+      }
+    })
+  }
+</script>

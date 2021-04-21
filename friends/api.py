@@ -68,3 +68,14 @@ def decline_friend_request_view(request, pk):
     )
     friend_request.decline()
     return Response("Friend request declined")
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def cancel_friend_request(request, pk):
+    """View to cancel a friend request"""
+    friend_request = get_object_or_404(
+        FriendRequest, pk=pk, sender=request.user
+    )
+    friend_request.cancel()
+    return Response("Friend request cancelled")

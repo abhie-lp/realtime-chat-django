@@ -101,6 +101,7 @@
 
 {% block page_script %}
   {% include 'friends/snippets/accept_friend_request.html' %}
+  {% include 'friends/snippets/decline_friend_request.html' %}
   <script type="text/javascript">
 
     function onFriendRequestAccepted() {
@@ -119,5 +120,4 @@
       declineFriendRequest(friend_request_id, onFriendRequestDeclined)
     }
   </script>
-  {% include 'friends/snippets/decline_friend_request.html' %}
 {% endblock page_script %}

@@ -222,7 +222,7 @@
   {% include 'account/snippets/send_friend_request.html' %}
   {% include 'friends/snippets/accept_friend_request.html' %}
   {% include 'friends/snippets/decline_friend_request.html' %}
-  {#% include 'snippets/cancel_friend_request.html' %#}
+  {% include 'friends/snippets/cancel_friend_request.html' %}
   {% include 'friends/snippets/remove_friend.html' %}
   {#% include 'chat/create_or_return_private_chat.html' %#}
   <script type="text/javascript">
@@ -258,7 +258,7 @@
     const cancelFriendRequestBtn = document.getElementById("id_cancel_friend_request_btn")
     if (cancelFriendRequestBtn != null) {
       cancelFriendRequestBtn.addEventListener("click", function () {
-        //cancelFriendRequest("{{account.username}}", onFriendRequestCancelled)
+        cancelFriendRequest("{{ pending_friend_request_id }}", onFriendRequestCancelled)
       })
     }
 
