@@ -45,6 +45,7 @@ INSTALLED_APPS += [
     "account.apps.AccountConfig",
     "friends.apps.FriendsConfig",
     "personal.apps.PersonalConfig",
+    "public_chat.apps.PublicChatConfig",
 ]
 
 MIDDLEWARE = [
