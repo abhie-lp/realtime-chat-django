@@ -17,7 +17,7 @@
 {% block content %}
   <div class="container">
     <div class="d-flex flex-column">
-      <div class="d-flex chat-log">
+      <div class="d-flex chat-log" id="id_chat_log">
 
       </div>
       <div class="d-flex chat-message-input-container">
@@ -33,17 +33,19 @@
 {% block page_script %}
   <script type="text/javascript">
     const setupPublicChatWebsocket = () => {
-      const  ws_scheme = window.location.protocol === "https" ? "wss" : "ws";
+      const ws_scheme = window.location.protocol === "https" ? "wss" : "ws";
 
       {% if debug_mode %}
-        const ws_path =`${ws_scheme}://${window.location.host}/public-chat/{{ room_id }}/`;
+        const ws_path = `${ws_scheme}://${window.location.host}/public-chat/{{ room_id }}/`;
       {% else %}
-        const ws_path = `${ws_scheme}://${window.location.host}:8001/public-chat/{{ room_id }}`;
+        const ws_path = `${ws_scheme}://${window.location.host}:8001/public-chat/{{ room_id }}/`;
       {% endif %}
 
       const publicChatSocket = new WebSocket(ws_path);
       publicChatSocket.onmessage = (message) => {
         console.log("Got chat message", message.data);
+        const data = JSON.parse(message.data);
+        appendChatMessage(data);
       }
 
       publicChatSocket.onclose = (e) => {
@@ -65,6 +67,67 @@
       if (publicChatSocket.readyState === WebSocket.CONNECTING) {
         console.log("Public chat socket CONNECTING STATE");
       }
+
+      document.getElementById("id_chat_message_input").focus();
+      document.getElementById("id_chat_message_input").onkeyup = (e) => {
+        if (e.keyCode === 13 && e.shiftKey) {
+          // Enter + shiftkey
+          // handled automatically by text area
+        } else if (e.keyCode === 13 && !e.shiftKey) {
+          document.getElementById("id_chat_message_submit").click();
+        }
+      };
+
+      document.getElementById("id_chat_message_submit").onclick = (e) => {
+        const messageInputDom = document.getElementById("id_chat_message_input");
+        const message = messageInputDom.value;
+
+        if (message !== undefined && message !== null && message.length !== 0) {
+          publicChatSocket.send(JSON.stringify({
+            "command": "send",
+            "message": message
+          }));
+          messageInputDom.value = "";
+        }
+      }
+    }
+
+    const appendChatMessage = (data) => {
+      const {message, username, user_id, profile_image} = data;
+      createChatMessageElement(message, username, profile_image, user_id);
+    }
+
+    const createChatMessageElement = (msg, username, profileImage, userID) => {
+      const chatLog = document.getElementById("id_chat_log");
+      const newMessageDiv = document.createElement("div");
+      newMessageDiv.classList.add("d-flex", "flex-row");
+
+      const profileImageElement = document.createElement("img");
+      profileImageElement.classList.add("profile-image", "rounded-circle", "img-fluid");
+      profileImageElement.width = 75;
+      profileImageElement.src = profileImage;
+      newMessageDiv.append(profileImageElement);
+
+      const div1 = document.createElement("div");
+      div1.classList.add("d-flex", "flex-column");
+
+      const div2 = document.createElement("div");
+      div2.classList.add("d-flex", "flex-row");
+
+      const usernameSpan = document.createElement("span");
+      usernameSpan.innerText = username + ": "
+
+      div2.appendChild(usernameSpan);
+
+      div1.appendChild(div2);
+
+      const msgP = document.createElement("p");
+      msgP.innerText = msg;
+      msgP.classList.add("msg-p");
+      div1.appendChild(msgP);
+
+      newMessageDiv.appendChild(div1);
+      chatLog.insertBefore(newMessageDiv, chatLog.firstChild)
     }
 
     setupPublicChatWebsocket();
