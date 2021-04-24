@@ -6,7 +6,7 @@ from django.contrib.humanize.templatetags.humanize import naturalday
 
 from channels.db import database_sync_to_async
 
-from .models import PublicChatRoom
+from .models import PublicChatRoom, PublicChatRoomMessage
 from utils.exceptions import ClientError
 
 
@@ -29,6 +29,12 @@ def get_room_or_error(room_id) -> PublicChatRoom:
         return PublicChatRoom.objects.get(pk=room_id)
     except PublicChatRoom.DoesNotExist:
         raise ClientError("ROOM_INVALID", "Room not created")
+
+
+@database_sync_to_async
+def create_new_public_room_chat(room: PublicChatRoom, user, message: str):
+    """Add to new chat for the user and room in DB"""
+    PublicChatRoomMessage.objects.create(user=user, room=room, content=message)
 
 
 def chat_timestamp(timestamp: datetime) -> str:

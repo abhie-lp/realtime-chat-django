@@ -7,7 +7,7 @@ from channels.generic.websocket import AsyncJsonWebsocketConsumer
 
 from .models import PublicChatRoom
 from .websockets import connect_user, disconnect_user, get_room_or_error, \
-    chat_timestamp
+    chat_timestamp, create_new_public_room_chat
 from utils.exceptions import ClientError
 
 User = get_user_model()
@@ -71,6 +71,7 @@ class PublicChatConsumer(AsyncJsonWebsocketConsumer):
             raise ClientError("ROOM_ACCESS_DENIED", "Room access denied")
 
         room: PublicChatRoom = await get_room_or_error(room_id)
+        await create_new_public_room_chat(room, user, message)
         await self.channel_layer.group_send(
             room.group_name,
             {
