@@ -108,6 +108,12 @@
 
       publicChatSocket.onopen = (e) => {
         console.log("Public chat socket OPEN again");
+        if ("{{ request.user.is_authenticated }}") {
+          publicChatSocket.send(JSON.stringify({
+            "command": "JOIN",
+            "room_id": "{{ room_id }}"
+          }))
+        }
       }
 
       publicChatSocket.onerror = (e) => {
@@ -138,8 +144,9 @@
 
         if (message !== undefined && message !== null && message.trim().length !== 0) {
           publicChatSocket.send(JSON.stringify({
-            "command": "send",
-            "message": message
+            "command": "SEND",
+            "message": message,
+            "room_id": {{ room_id }}
           }));
         } else {
           alert("Cannot send empty message.");

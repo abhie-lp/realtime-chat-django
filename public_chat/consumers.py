@@ -1,12 +1,13 @@
 """Websocket consumers for public_chat app"""
 
-from datetime import datetime, timedelta
-
-from channels.generic.websocket import AsyncJsonWebsocketConsumer
 from django.utils import timezone
 from django.contrib.auth import get_user_model
-from django.contrib.humanize.templatetags.humanize import naturalday
 
+from channels.generic.websocket import AsyncJsonWebsocketConsumer
+
+from .models import PublicChatRoom
+from .websockets import connect_user, disconnect_user, get_room_or_error, \
+    chat_timestamp
 from utils.exceptions import ClientError
 
 User = get_user_model()
@@ -21,6 +22,9 @@ class PublicChatConsumer(AsyncJsonWebsocketConsumer):
         print("PublicChat connect", self.scope["user"])
         await self.accept()
 
+        # Store the room_id
+        self.room_id = None
+
         # Add them to group
         await self.channel_layer.group_add(
             "public_chatroom_1",
@@ -31,27 +35,44 @@ class PublicChatConsumer(AsyncJsonWebsocketConsumer):
         """Handle the close request from client websocket"""
         print("PublicChatConsumer", "disconnect")
 
+        if self.room_id:
+            await self.leave_room(self.room_id)
+
     async def receive_json(self, content, **kwargs):
         """Handle the data sent from the client websocket"""
+        print("PublicChatConsumer", "receive_json", content)
         command: str = content.get("command", None)
         message: str = content.get("message", "")
+        room_id = content.get("room_id")
 
         try:
-            if command == "send":
+            if command == "SEND":
                 if not message.strip():
                     raise ClientError(422, "You can't send an empty message.")
-                await self.send_message(message)
+                await self.send_room_message(room_id, message)
+            elif command == "JOIN":
+                await self.join_room(room_id)
+            elif command == "LEAVE":
+                await self.leave_room(room_id)
         except ClientError as e:
-            error_data = {"error": e.code}
-            if e.message:
-                error_data["message"] = e.message
-            await self.send_json(error_data)
+            await self.handle_client_error(e)
 
-    async def send_message(self, message):
-        """Send message with data"""
+    async def send_room_message(self, room_id, message):
+        """Called by receive_json when someone sends a message to a room"""
+        print("PblicChatConsumer", "send_room_message")
         user = self.scope["user"]
+
+        if self.room_id is not None:
+            if str(room_id) != str(self.room_id):
+                raise ClientError("ROOM_ACCESS_DENIED", "Room access denied")
+            elif not user.is_authenticated:
+                raise ClientError("AUTH_ERRO", "Not authenticated to join")
+        else:
+            raise ClientError("ROOM_ACCESS_DENIED", "Room access denied")
+
+        room: PublicChatRoom = await get_room_or_error(room_id)
         await self.channel_layer.group_send(
-            "public_chatroom_1",
+            room.group_name,
             {
                 "type": "chat.message",     # chat_message
                 "profile_image": (user.profile_image.url
@@ -75,22 +96,57 @@ class PublicChatConsumer(AsyncJsonWebsocketConsumer):
             "natural_timestamp": chat_timestamp(timezone.now())
         })
 
+    async def join_room(self, room_id):
+        """Called by receive_json on JOIN command"""
+        print("PublicChatConsumer", "join_room", self.scope["user"])
+        if self.scope["user"].is_authenticated:
+            try:
+                room: PublicChatRoom = await get_room_or_error(room_id)
+            except ClientError as e:
+                await self.handle_client_error(e)
+            else:
+                # Add user to the room
+                await connect_user(room, self.scope["user"])
 
-def chat_timestamp(timestamp: datetime):
-    """
-    Format the timestamp of the chat
+                # Set the room_id with the current room
+                self.room_id = room_id
 
-    1. Today or yesterday:
-        - today at 12:45 AM
-        - yesterday at 12:30 PM
-    2. Other:
-        - 24/04/2021
-    """
-    today = datetime.now()
+                # Add user to the group
+                await self.channel_layer.group_add(
+                    room.group_name,
+                    self.channel_name
+                )
 
-    if timestamp.date() in (today.date(), (today - timedelta(1)).date()):
-        str_time = timestamp.strftime("%I:%M %p").strip("0")
-        ts = f"{naturalday(timestamp)} at {str_time}"
-    else:
-        ts = timestamp.strftime("%d/%m/%Y")
-    return ts
+                # Send acknowledgement to client
+                await self.send_json({
+                    "join": str(room_id),
+                    "username": self.scope["user"].username
+                })
+
+    async def leave_room(self, room_id):
+        """Called by receive_json on LEAVE command"""
+        print("PublicChatConsumer", "leave_room")
+        if self.scope["user"].is_authenticated:
+            try:
+                room: PublicChatRoom = await get_room_or_error(room_id)
+            except ClientError as e:
+                await self.handle_client_error(e)
+            else:
+                # Remove user from room users
+                await disconnect_user(room, self.scope["user"])
+
+                # Set room_id to None
+                self.room_id = None
+
+                # Remove user from the group
+                await self.channel_layer.group_discard(
+                    room.group_name,
+                    self.channel_name
+                )
+
+    async def handle_client_error(self, exception: ClientError):
+        """Handle ClientError and send data to client"""
+        error_data = {"error": exception.code}
+        if exception.message:
+            error_data["message"] = exception.message
+            await self.send_json(error_data)
