@@ -167,3 +167,12 @@ LOGOUT_REDIRECT_URL = "/login/"
 
 # Max size of the image 5 MB
 DATA_UPLOAD_MAX_MEMORY_SIZE = 5_242_880
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": (("localhost", 6379),)
+        }
+    }
+}
