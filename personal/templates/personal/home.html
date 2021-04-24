@@ -51,6 +51,12 @@
       margin-top: 10px;
       justify-content: start;
     }
+
+    .timestamp-span {
+      font-weight: 400;
+      font-size: 0.8em;
+      color: var(--secondary-text-color);
+    }
   </style>
 {% endblock page_style %}
 
@@ -143,11 +149,11 @@
     }
 
     const appendChatMessage = (data) => {
-      const {message, username, user_id, profile_image} = data;
-      createChatMessageElement(message, username, profile_image, user_id);
+      const {message, username, natural_timestamp, profile_image} = data;
+      createChatMessageElement(message, username, profile_image, natural_timestamp);
     }
 
-    const createChatMessageElement = (msg, username, profileImage, userID) => {
+    const createChatMessageElement = (msg, username, profileImage, timestamp) => {
       const chatLog = document.getElementById("id_chat_log");
       const newMessageDiv = document.createElement("div");
       newMessageDiv.classList.add("d-flex", "flex-row", "message-container");
@@ -178,8 +184,12 @@
       })
       usernameSpan.classList.add("username-span")
       usernameSpan.innerText = username + ": "
-
       div2.appendChild(usernameSpan);
+
+      const timestampSpan = document.createElement("span")
+      timestampSpan.innerText = timestamp;
+      timestampSpan.classList.add("timestamp-span", "d-flex", "align-items-center");
+      div2.appendChild(timestampSpan);
 
       div1.appendChild(div2);
 

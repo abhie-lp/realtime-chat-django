@@ -1,8 +1,11 @@
 """Websocket consumers for public_chat app"""
 
-from json import loads, dumps
+from datetime import datetime, timedelta
+
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
+from django.utils import timezone
 from django.contrib.auth import get_user_model
+from django.contrib.humanize.templatetags.humanize import naturalday
 
 from utils.exceptions import ClientError
 
@@ -69,4 +72,25 @@ class PublicChatConsumer(AsyncJsonWebsocketConsumer):
             "username": event["username"],
             "user_id": event["user_id"],
             "message": event["message"],
+            "natural_timestamp": chat_timestamp(timezone.now())
         })
+
+
+def chat_timestamp(timestamp: datetime):
+    """
+    Format the timestamp of the chat
+
+    1. Today or yesterday:
+        - today at 12:45 AM
+        - yesterday at 12:30 PM
+    2. Other:
+        - 24/04/2021
+    """
+    today = datetime.now()
+
+    if timestamp.date() in (today.date(), (today - timedelta(1)).date()):
+        str_time = timestamp.strftime("%I:%M %p").strip("0")
+        ts = f"{naturalday(timestamp)} at {str_time}"
+    else:
+        ts = timestamp.strftime("%d/%m/%Y")
+    return ts
