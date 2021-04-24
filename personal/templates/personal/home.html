@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block page_style %}
   <style type="text/css">
@@ -10,6 +11,45 @@
       background-color: #fff;
       font-size: 0.9em;
       flex-direction: column-reverse;
+    }
+
+    .profile-image {
+      width: 33px;
+      height: 33px;
+      margin-top: 0px;
+      margin-bottom: auto;
+    }
+
+    .profile-image:hover {
+      cursor: pointer;
+    }
+
+    .username-span {
+      font-weight: 600;
+      margin-top: 0;
+      margin-bottom: auto;
+      margin-left: 5px;
+      margin-right: 5px;
+    }
+
+    .username-span:hover {
+      cursor: pointer;
+    }
+
+    .msg-p {
+      font-weight: 450;
+      margin-top: 5px;
+      margin-bottom: auto;
+      margin-left: 5px;
+      margin-right: 5px;
+      white-space: normal;
+      -ms-word-break: break-all;
+      word-break: break-all;
+    }
+
+    .message-container {
+      margin-top: 10px;
+      justify-content: start;
     }
   </style>
 {% endblock page_style %}
@@ -82,13 +122,15 @@
         const messageInputDom = document.getElementById("id_chat_message_input");
         const message = messageInputDom.value;
 
-        if (message !== undefined && message !== null && message.length !== 0) {
+        if (message !== undefined && message !== null && message.trim().length !== 0) {
           publicChatSocket.send(JSON.stringify({
             "command": "send",
             "message": message
           }));
-          messageInputDom.value = "";
+        } else {
+          alert("Cannot send empty message.");
         }
+        messageInputDom.value = "";
       }
     }
 
@@ -100,12 +142,19 @@
     const createChatMessageElement = (msg, username, profileImage, userID) => {
       const chatLog = document.getElementById("id_chat_log");
       const newMessageDiv = document.createElement("div");
-      newMessageDiv.classList.add("d-flex", "flex-row");
+      newMessageDiv.classList.add("d-flex", "flex-row", "message-container");
 
       const profileImageElement = document.createElement("img");
+      profileImageElement.addEventListener("click", (e) => {
+        const url = "{% url 'account:view' username=9999999999 %}".replace("9999999999", username);
+        window.open(url, "_blank").focus();
+      })
       profileImageElement.classList.add("profile-image", "rounded-circle", "img-fluid");
-      profileImageElement.width = 75;
-      profileImageElement.src = profileImage;
+      if (profileImage !== null && profileImage !== undefined && profileImage.length > 0) {
+        profileImageElement.src = profileImage;
+      } else {
+        profileImageElement.src = "{% static 'images/dummy_image.png' %}"
+      }
       newMessageDiv.append(profileImageElement);
 
       const div1 = document.createElement("div");
@@ -115,6 +164,11 @@
       div2.classList.add("d-flex", "flex-row");
 
       const usernameSpan = document.createElement("span");
+      usernameSpan.addEventListener("click", (e) => {
+        const url = "{% url 'account:view' username=9999999999 %}".replace("9999999999", username);
+        window.open(url, "_blank").focus();
+      })
+      usernameSpan.classList.add("username-span")
       usernameSpan.innerText = username + ": "
 
       div2.appendChild(usernameSpan);

@@ -36,13 +36,15 @@ class PublicChatConsumer(AsyncJsonWebsocketConsumer):
             await self.send_message(message)
 
     async def send_message(self, message):
+        user = self.scope["user"]
         await self.channel_layer.group_send(
             "public_chatroom_1",
             {
                 "type": "chat.message",     # chat_message
-                "profile_image": self.scope["user"].profile_image.url,
-                "username":  self.scope["user"].username,
-                "user_id":  self.scope["user"].id,
+                "profile_image": (user.profile_image.url
+                                  if user.profile_image else None),
+                "username":  user.username,
+                "user_id":  user.id,
                 "message":  message,
             }
         )
