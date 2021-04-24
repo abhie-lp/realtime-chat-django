@@ -5,12 +5,14 @@ from channels.routing import ProtocolTypeRouter, URLRouter
 from channels.security.websocket import AllowedHostsOriginValidator
 from django.urls import path
 
+from public_chat.consumers import PublicChatConsumer
+
 application = ProtocolTypeRouter({
     "websocket": AllowedHostsOriginValidator(
         AuthMiddlewareStack(
-            [
-                # URLRouter
-            ]
+            URLRouter([
+                path("public-chat/<int:room_id>/", PublicChatConsumer.as_asgi()),
+            ])
         )
     )
 })
