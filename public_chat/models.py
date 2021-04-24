@@ -19,7 +19,7 @@ class PublicChatRoom(models.Model):
         if user.id in self.users.values_list("pk", flat=True):
             add_status = False
         else:
-            self.user.add(user)
+            self.users.add(user)
             add_status = True
         return add_status
 
@@ -35,7 +35,7 @@ class PublicChatRoom(models.Model):
     @property
     def group_name(self):
         """Returns the channels group name that sockets should subscribe to"""
-        return f"PublicChat-{self.id}"
+        return f"PCR-{self.id}"
 
 
 class PublicChatRoomMessage(models.Model):
