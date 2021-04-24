@@ -61,13 +61,15 @@
 
       </div>
       <div class="d-flex chat-message-input-container">
-        <textarea class="flex-grow-1 chat-message-input" id="id_chat_message_input"></textarea>
+        <textarea class="flex-grow-1 chat-message-input" id="id_chat_message_input" required></textarea>
         <button class="btn btn-primary chat-message-submit-button">
           <span id="id_chat_message_submit" class="material-icons">send</span>
         </button>
       </div>
     </div>
   </div>
+
+  {% include "personal/snippets/client_error_modal.html" %}
 {% endblock content %}
 
 {% block page_script %}
@@ -85,7 +87,13 @@
       publicChatSocket.onmessage = (message) => {
         console.log("Got chat message", message.data);
         const data = JSON.parse(message.data);
-        appendChatMessage(data);
+
+        // Check if there is an error
+        if (data.error) {
+          showClientErrorModal(data.message);
+        } else if (data.msg_type === 0){
+          appendChatMessage(data);
+        }
       }
 
       publicChatSocket.onclose = (e) => {
@@ -185,5 +193,10 @@
     }
 
     setupPublicChatWebsocket();
+
+    const showClientErrorModal = (message) => {
+      document.getElementById("id_client_error_modal_body").innerText = message;
+      document.getElementById("id_trigger_client_error_modal").click();
+    }
   </script>
 {% endblock page_script %}
