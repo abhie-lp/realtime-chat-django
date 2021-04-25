@@ -108,7 +108,7 @@
         if (messages !== null && messages !== undefined && messages.length !== 0) {
           setPageNumber(newPageNumber);
           messages.forEach(message => {
-            appendChatMessage(message)
+            appendChatMessage(message, true, false)
           })
         } else {
           setPageNumberExhausted()
@@ -135,7 +135,7 @@
           console.log(data.username, "joined the room");
           getRoomPreviousChats();
         } else if (data.msg_type === 0){
-          appendChatMessage(data);
+          appendChatMessage(data, true, true);
         } else if (data.messages_payload) {
           console.log("PREVIOUS MESSAGES");
           handlePreviousRoomChats(data.messages, data.new_page_number)
@@ -205,12 +205,12 @@
       })
     }
 
-    const appendChatMessage = (data) => {
+    const appendChatMessage = (data, maintainPosition, isNewMessage) => {
       const {message, username, natural_timestamp, profile_image} = data;
-      createChatMessageElement(message, username, profile_image, natural_timestamp);
+      createChatMessageElement(message, username, profile_image, natural_timestamp, maintainPosition, isNewMessage);
     }
 
-    const createChatMessageElement = (msg, username, profileImage, timestamp) => {
+    const createChatMessageElement = (msg, username, profileImage, timestamp, maintainPosition, isNewMessage) => {
       const chatLog = document.getElementById("id_chat_log");
       const newMessageDiv = document.createElement("div");
       newMessageDiv.classList.add("d-flex", "flex-row", "message-container");
@@ -256,7 +256,15 @@
       div1.appendChild(msgP);
 
       newMessageDiv.appendChild(div1);
-      chatLog.insertBefore(newMessageDiv, chatLog.firstChild)
+      if (isNewMessage) {
+        chatLog.insertBefore(newMessageDiv, chatLog.firstChild);
+      } else {
+        chatLog.appendChild(newMessageDiv);
+      }
+
+      if (!maintainPosition) {
+        chatLog.scrollTop = chatLog.scrollHeight;
+      }
     }
 
     setupPublicChatWebsocket();
