@@ -5,10 +5,11 @@ from django.contrib.auth import get_user_model
 
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 
-from .constants import MSG_TYPE_MESSAGE
+from .constants import MSG_TYPE_MESSAGE, MSG_TYPE_CONNECTED_USERS_COUNT
 from .models import PublicChatRoom
 from .websockets import connect_user, disconnect_user, get_room_or_error, \
-    chat_timestamp, create_new_public_room_chat, get_room_chats
+    chat_timestamp, create_new_public_room_chat, get_room_chats, \
+    get_connected_users_count
 from utils.exceptions import ClientError
 
 User = get_user_model()
@@ -128,6 +129,16 @@ class PublicChatConsumer(AsyncJsonWebsocketConsumer):
                     "username": self.scope["user"].username
                 })
 
+                # Send the total number of connected users to client
+                connected_users_count = await get_connected_users_count(room)
+                await self.channel_layer.group_send(
+                    room.group_name,
+                    {
+                        "type": "connected.users.count",
+                        "connected_users_count": connected_users_count
+                    }
+                )
+
     async def leave_room(self, room_id):
         """Called by receive_json on LEAVE command"""
         print("PublicChatConsumer", "leave_room")
@@ -149,6 +160,16 @@ class PublicChatConsumer(AsyncJsonWebsocketConsumer):
                     self.channel_name
                 )
 
+                # Send the total number of connected users to the client
+                connected_users_count = await get_connected_users_count(room)
+                await self.channel_layer.group_send(
+                    room.group_name,
+                    {
+                        "type": "connected.users.count",
+                        "connected_users_count": connected_users_count
+                    }
+                )
+
     async def send_room_previous_chats(self, message_data: dict):
         """Sends previous chats of room to client"""
         print("PublicChatConsumer", "send_room_previous_chats")
@@ -164,3 +185,12 @@ class PublicChatConsumer(AsyncJsonWebsocketConsumer):
         if exception.message:
             error_data["message"] = exception.message
             await self.send_json(error_data)
+
+    async def connected_users_count(self, event):
+        """Send the number of connected users to the group"""
+        print("PublicChatConsumer", "connected_users_count",
+              event["connected_users_count"])
+        await self.send_json({
+            "msg_type": MSG_TYPE_CONNECTED_USERS_COUNT,
+            "connected_users_count": event["connected_users_count"]
+        })

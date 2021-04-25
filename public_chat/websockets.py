@@ -67,6 +67,12 @@ def get_room_chats(room, page_number) -> dict:
     return payload
 
 
+@database_sync_to_async
+def get_connected_users_count(room: PublicChatRoom) -> int:
+    """Return the total number of connected users in room"""
+    return room.users.count()
+
+
 def chat_timestamp(timestamp: datetime) -> str:
     """
     Format the timestamp of the chat
