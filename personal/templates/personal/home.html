@@ -63,6 +63,14 @@
 {% block content %}
   <div class="container">
     <div class="d-flex flex-column">
+      <div class="d-flex flex-row justify-content-center" id="id_chatroom_loading_spinner_container">
+        <div class="spinner-border text-primary"
+             id="id_chatroom_loading_spinner"
+             role="status"
+             style="display: none">
+          <span class="sr-only">Loading.....</span>
+        </div>
+      </div>
       <div class="d-flex chat-log" id="id_chat_log">
 
       </div>
@@ -76,7 +84,7 @@
   </div>
 
   {% include "personal/snippets/client_error_modal.html" %}
-  <span class="" id="id_page_number">1</span>
+  <span class="d-none" id="id_page_number">1</span>
 {% endblock content %}
 
 {% block page_script %}
@@ -95,7 +103,7 @@
         const pageNumber = document.getElementById("id_page_number").innerText
         if (pageNumber !== "-1") {
           setPageNumberExhausted();   // Prevent further requests until previous request is complete
-          console.log("getRoomPreviousChats", "pageNumber", document.getElementById("id_page_number").innerText);
+          displayChatLoadingSpinner(true);
           publicChatSocket.send(JSON.stringify({
             "command": "ROOM_MESSAGES",
             "room_id": {{ room_id }},
@@ -106,11 +114,15 @@
 
       const handlePreviousRoomChats = (messages, newPageNumber) => {
         if (messages !== null && messages !== undefined && messages.length !== 0) {
-          setPageNumber(newPageNumber);
-          messages.forEach(message => {
-            appendChatMessage(message, true, false)
+          setTimeout(() => {
+            displayChatLoadingSpinner(false);
+            setPageNumber(newPageNumber);
+            messages.forEach(message => {
+              appendChatMessage(message, true, false)
+            }, 1000);
           })
         } else {
+          displayChatLoadingSpinner(false);
           setPageNumberExhausted()
         }
       }
@@ -196,9 +208,6 @@
 
       const chatLog = document.getElementById("id_chat_log");
       chatLog.addEventListener("scroll", (e) => {
-        console.log("ScrollTop", Math.abs(chatLog.scrollTop) + 2);
-        console.log("scrollHeight", chatLog.scrollHeight);
-        console.log("offsetHeight", chatLog.offsetHeight);
         if ((Math.abs(chatLog.scrollTop) + 2) >= (chatLog.scrollHeight - chatLog.offsetHeight)) {
           getRoomPreviousChats();
         }
@@ -272,6 +281,15 @@
     const showClientErrorModal = (message) => {
       document.getElementById("id_client_error_modal_body").innerText = message;
       document.getElementById("id_trigger_client_error_modal").click();
+    }
+
+    const displayChatLoadingSpinner = (toDisplay) => {
+      const spinner = document.getElementById("id_chatroom_loading_spinner");
+      if (toDisplay) {
+        spinner.style.display = "block";
+      } else {
+        spinner.style.display = "none";
+      }
     }
   </script>
 {% endblock page_script %}
