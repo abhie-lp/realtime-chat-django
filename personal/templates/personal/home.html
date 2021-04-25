@@ -2,6 +2,7 @@
 {% load static %}
 
 {% block page_style %}
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.7.1/styles/default.min.css">
   <style type="text/css">
     .chat-log {
       height: 500px;
@@ -94,6 +95,9 @@
 {% endblock content %}
 
 {% block page_script %}
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/markdown-it/12.0.6/markdown-it.min.js" integrity="sha512-7U8vY7c6UQpBNQOnBg3xKX502NAckvk70H1nWvh6W7izA489jEz+RCN3ntT1VMdXewaSKkOrEBegp/h6SPXrjw==" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.7.1/highlight.min.js"></script>
+  <script>hljs.highlightAll();</script>
   <script type="text/javascript">
     const setupPublicChatWebsocket = () => {
 
@@ -289,7 +293,7 @@
       div1.appendChild(div2);
 
       const msgP = document.createElement("p");
-      msgP.innerText = msg;
+      msgP.innerHTML = validateText(msg);
       msgP.classList.add("msg-p");
       div1.appendChild(msgP);
 
@@ -319,6 +323,24 @@
       } else {
         spinner.style.display = "none";
       }
+    }
+
+    const validateText = str => {
+      const md = window.markdownit({
+        highlight: (str, lang) => {
+          if (lang && hljs.getLanguage(lang)) {
+            try {
+              return "<pre class='hljs'><code>" +
+                hljs.highlight(lang, str, true).value +
+                '</code></pre>';
+            } catch (_) {}
+          }
+          return '<pre class="hljs"><code>' + md.utils.escapeHtml(str) + '</code></pre>';
+        },
+        linkify: true
+      });
+
+      return md.render(str);
     }
   </script>
 {% endblock page_script %}
