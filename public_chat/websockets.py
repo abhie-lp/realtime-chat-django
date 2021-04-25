@@ -2,10 +2,12 @@
 
 from datetime import datetime, timedelta
 
+from django.core.paginator import Paginator
 from django.contrib.humanize.templatetags.humanize import naturalday
 
 from channels.db import database_sync_to_async
 
+from .constants import DEFAULT_PAGE_SIZE
 from .models import PublicChatRoom, PublicChatRoomMessage
 from utils.exceptions import ClientError
 
@@ -35,6 +37,34 @@ def get_room_or_error(room_id) -> PublicChatRoom:
 def create_new_public_room_chat(room: PublicChatRoom, user, message: str):
     """Add to new chat for the user and room in DB"""
     PublicChatRoomMessage.objects.create(user=user, room=room, content=message)
+
+
+@database_sync_to_async
+def get_room_chats(room, page_number) -> dict:
+    """Get paginated public room chats"""
+    qs = (PublicChatRoomMessage.objects
+          .by_room(room)
+          .select_related("user")
+          .only("user__username", "user__profile_image",
+                "content", "created_at"))
+    pages = Paginator(qs, DEFAULT_PAGE_SIZE)
+
+    new_page_number = page_number
+    payload = {}
+
+    # Check if page requested is <= total number of pages
+    if new_page_number <= pages.num_pages:
+        from .encoders import LazyRoomChatMessageEncoder
+
+        new_page_number = new_page_number + 1
+        serializer = LazyRoomChatMessageEncoder()
+        payload["messages"] = serializer.serialize(
+            pages.page(page_number).object_list
+        )
+    else:
+        payload["messages"] = None
+    payload["new_page_number"] = new_page_number
+    return payload
 
 
 def chat_timestamp(timestamp: datetime) -> str:

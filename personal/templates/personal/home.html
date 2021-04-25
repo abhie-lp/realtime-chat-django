@@ -76,11 +76,45 @@
   </div>
 
   {% include "personal/snippets/client_error_modal.html" %}
+  <span class="" id="id_page_number">1</span>
 {% endblock content %}
 
 {% block page_script %}
   <script type="text/javascript">
     const setupPublicChatWebsocket = () => {
+
+      const setPageNumber = (pageNumber) => {
+        document.getElementById("id_page_number").innerText = pageNumber;
+      }
+
+      const setPageNumberExhausted = () => {
+        setPageNumber(-1);
+      }
+
+      const getRoomPreviousChats = () => {
+        const pageNumber = document.getElementById("id_page_number").innerText
+        if (pageNumber !== "-1") {
+          setPageNumberExhausted();   // Prevent further requests until previous request is complete
+          console.log("getRoomPreviousChats", "pageNumber", document.getElementById("id_page_number").innerText);
+          publicChatSocket.send(JSON.stringify({
+            "command": "ROOM_MESSAGES",
+            "room_id": {{ room_id }},
+            "page_number": Number.parseInt(pageNumber)
+          }))
+        }
+      }
+
+      const handlePreviousRoomChats = (messages, newPageNumber) => {
+        if (messages !== null && messages !== undefined && messages.length !== 0) {
+          setPageNumber(newPageNumber);
+          messages.forEach(message => {
+            appendChatMessage(message)
+          })
+        } else {
+          setPageNumberExhausted()
+        }
+      }
+
       const ws_scheme = window.location.protocol === "https" ? "wss" : "ws";
 
       {% if debug_mode %}
@@ -97,8 +131,14 @@
         // Check if there is an error
         if (data.error) {
           showClientErrorModal(data.message);
+        } else if (data.join) {
+          console.log(data.username, "joined the room");
+          getRoomPreviousChats();
         } else if (data.msg_type === 0){
           appendChatMessage(data);
+        } else if (data.messages_payload) {
+          console.log("PREVIOUS MESSAGES");
+          handlePreviousRoomChats(data.messages, data.new_page_number)
         }
       }
 
@@ -153,6 +193,16 @@
         }
         messageInputDom.value = "";
       }
+
+      const chatLog = document.getElementById("id_chat_log");
+      chatLog.addEventListener("scroll", (e) => {
+        console.log("ScrollTop", Math.abs(chatLog.scrollTop) + 2);
+        console.log("scrollHeight", chatLog.scrollHeight);
+        console.log("offsetHeight", chatLog.offsetHeight);
+        if ((Math.abs(chatLog.scrollTop) + 2) >= (chatLog.scrollHeight - chatLog.offsetHeight)) {
+          getRoomPreviousChats();
+        }
+      })
     }
 
     const appendChatMessage = (data) => {

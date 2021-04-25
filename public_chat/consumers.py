@@ -5,13 +5,13 @@ from django.contrib.auth import get_user_model
 
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 
+from .constants import MSG_TYPE_MESSAGE
 from .models import PublicChatRoom
 from .websockets import connect_user, disconnect_user, get_room_or_error, \
-    chat_timestamp, create_new_public_room_chat
+    chat_timestamp, create_new_public_room_chat, get_room_chats
 from utils.exceptions import ClientError
 
 User = get_user_model()
-MSG_TYPE_MESSAGE = 0
 
 
 class PublicChatConsumer(AsyncJsonWebsocketConsumer):
@@ -54,6 +54,10 @@ class PublicChatConsumer(AsyncJsonWebsocketConsumer):
                 await self.join_room(room_id)
             elif command == "LEAVE":
                 await self.leave_room(room_id)
+            elif command == "ROOM_MESSAGES":
+                room = await get_room_or_error(room_id)
+                payload = await get_room_chats(room, content["page_number"])
+                await self.send_room_previous_chats(payload)
         except ClientError as e:
             await self.handle_client_error(e)
 
@@ -144,6 +148,15 @@ class PublicChatConsumer(AsyncJsonWebsocketConsumer):
                     room.group_name,
                     self.channel_name
                 )
+
+    async def send_room_previous_chats(self, message_data: dict):
+        """Sends previous chats of room to client"""
+        print("PublicChatConsumer", "send_room_previous_chats")
+        await self.send_json({
+            "messages_payload": "messages_payload",
+            "messages": message_data["messages"],
+            "new_page_number": message_data["new_page_number"]
+        })
 
     async def handle_client_error(self, exception: ClientError):
         """Handle ClientError and send data to client"""
