@@ -137,7 +137,8 @@
             <div class="d-flex flex-column" id="id_chat_log_container">
 
               <div class="d-flex flex-row justify-content-center" id="id_chatroom_loading_spinner_container">
-                <div class="spinner-border text-primary" id="id_chatroom_loading_spinner" role="status" style="display: none; ">
+                <div class="spinner-border text-primary" id="id_chatroom_loading_spinner" role="status"
+                     style="display: none; ">
                   <span class="sr-only">Loading...</span>
                 </div>
               </div>
@@ -165,14 +166,20 @@
           </div>
           <div class="card-body p-1">
             <div class="d-flex flex-column friends-list-container ">
-              {% for x in m_and_f %}
+              {% for chat in friend_msg %}
                 <div class="d-flex flex-row p-2 friend-container flex-grow-1"
-                     onclick="onSelectFriend('{{ x.friend.id }}')" id="id_friend_container_{{ x.friend.id }}">
-                  <img class="profile-image rounded-circle img-fluid" id="id_friend_img_{{ x.friend.id }}"
-                       src="{% static 'images/dummy_image.png' %}">
+                     onclick="onSelectFriend('{{ chat.friend.username }}')"
+                     id="id_friend_container_{{ chat.friend.username }}">
+                  <img class="profile-image rounded-circle img-fluid"
+                      {% if chat.friend.profile_image %}
+                       src="{{ chat.friend.profile_image.url }}"
+                      {% else %}
+                       src="{% static 'images/dummy_image.png' %}"
+                      {% endif %}
+                  >
                   <div class="d-flex flex-column">
-                    <span class="username-span">{{ x.friend.username }}</span>
-                    <span class="friend-message-span">{{ x.message|truncatechars:20 }}</span>
+                    <span class="username-span">{{ chat.friend.username }}</span>
+                    <span class="friend-message-span">{{ chat.message|truncatechars:20 }}</span>
                   </div>
                 </div>
               {% endfor %}
