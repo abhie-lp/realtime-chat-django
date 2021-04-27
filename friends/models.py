@@ -2,6 +2,7 @@ from django.db import models
 from django.conf import settings
 
 from account.models import Account
+from private_chat.utils import get_or_create_chat
 
 
 class FriendList(models.Model):
@@ -21,9 +22,24 @@ class FriendList(models.Model):
         """Add friend if not in friend list"""
         self.friends.add(account)
 
+        # Create chat room between two users
+        chat = get_or_create_chat(self.user, account)
+
+        # Check if chat is inactive. It means they were friends once.
+        # Then stopped being friends and are friends again.
+        if not chat.is_active:
+            chat.is_active = True
+            chat.save()
+
     def remove_friend(self, account):
         """Remove friend if exists in friend list"""
         self.friends.remove(account)
+
+        # Deactivate the chat room between two friends
+        chat = get_or_create_chat(self.user, account)
+        if chat.is_active:
+            chat.is_active = False
+            chat.save()
 
     def unfriend(self, friend_to_unfriend):
         """
