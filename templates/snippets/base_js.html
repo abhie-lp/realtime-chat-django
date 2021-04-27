@@ -1,3 +1,34 @@
 <script type="text/javascript">
   console.log("Page is up");
+
+  setupChatDropdownHeader();
+
+  function setupChatDropdownHeader() {
+    const notificationContainer = document.getElementById("id_chat_notifications_container");
+
+    if (notificationContainer !== null  && notificationContainer !== undefined) {
+      const div = document.createElement("div");
+      div.classList.add("chat-dropdown-header", "d-flex", "flex-row", "justify-content-end", "m-auto", "align-items-end");
+      div.addEventListener("click", (e) => {
+        const url = "{% url 'private_chat:chat' %}";
+        redirectToChat(url);
+      })
+
+      const span1 = document.createElement("span");
+      span1.classList.add("mr-2");
+      span1.innerText = "Go to chat";
+      div.appendChild(span1);
+
+      const span2 = document.createElement("span");
+      span2.classList.add("material-icons", "mr-2");
+      span2.innerText = "open_with";
+      div.appendChild(span2);
+
+      notificationContainer.appendChild(div);
+    }
+  }
+
+  const redirectToChat = url => {
+    window.location.href = url;
+  }
 </script>
