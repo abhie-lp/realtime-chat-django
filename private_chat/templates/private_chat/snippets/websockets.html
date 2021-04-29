@@ -1,0 +1,66 @@
+<script type="text/javascript">
+  (function () {
+    console.log("Running websocket");
+    let websocket;
+    let wsPath;
+    let roomId;
+
+    const closeWebSocket = () => {
+      if (websocket !== null && websocket !== undefined) {
+        websocket.close();
+        websocket = null;
+      }
+    };
+
+    const setUpWebsocket = (room_id) => {
+      console.log("setUpWebsocket", room_id);
+      roomId = room_id;
+      closeWebSocket();
+
+      const wsScheme = window.location.protocol == "https:" ? "wss" : "ws";
+
+      {% if debug_mode %}
+        wsPath = `${wsScheme}://${window.location.host}/private-chat/${roomId}/`;
+      {% else %}
+        wsPath = `${wsScheme}://${window.location.host}:8001/private-chat/${ roomId }/`;
+      {% endif %}
+
+      websocket = new WebSocket(wsPath);
+
+      /*
+      ###################### ON OPEN #######################
+       */
+      websocket.onopen = () => {
+        console.log("Opening websocket");
+        websocket.send(JSON.stringify({
+          "command": "JOIN",
+          "room": roomId
+        }))
+      }
+
+      /*
+      ###################### ON CLOSE #######################
+       */
+      websocket.onclose = () => {
+        console.log("Closing websocket");
+      }
+
+      /*
+      ###################### ON ERROR #######################
+       */
+      websocket.onerror = (error) => {
+        console.log("Error in websocket", error);
+      }
+
+      /*
+      ###################### ON MESSAGE #######################
+       */
+      websocket.onmessage = (message) => {
+        console.log("websocket", message);
+      }
+
+    }
+
+    setUpWebsocket(12);
+  })();
+</script>
