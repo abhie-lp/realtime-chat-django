@@ -5,6 +5,31 @@
     let wsPath;
     let roomId;
 
+    const friendContainerDiv = document.getElementsByClassName("friend-container");
+
+    const getPrivateChatID = (e) => {
+      const username = e.currentTarget.getAttribute("data-username");
+      console.log("Get room id", username);
+      const payload = {
+        "csrfmiddlewaretoken": "{{ csrf_token }}",
+        "user_2": username
+      };
+
+      $.ajax({
+        type: "POST",
+        dataType: "json",
+        url: "{% url 'private_chat:private_room_id' %}",
+        data: payload,
+        timeout: 5000,
+        success: (data) => {
+          console.log(data);
+        },
+        error: (error) => {
+          console.log(error);
+        }
+      })
+    }
+
     const closeWebSocket = () => {
       if (websocket !== null && websocket !== undefined) {
         websocket.close();
@@ -60,6 +85,11 @@
       }
 
     }
+
+    Array.from(friendContainerDiv).forEach(function(div) {
+      div.addEventListener('click', getPrivateChatID);
+    });
+
 
     setUpWebsocket(12);
   })();
