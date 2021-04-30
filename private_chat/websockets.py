@@ -3,8 +3,10 @@
 from django.db.models import Q
 from channels.db import database_sync_to_async
 
-from .models import PrivateChatRoom
+from account.encoders import LazyAccountEncoder
 from friends.models import FriendList
+
+from .models import PrivateChatRoom
 
 
 @database_sync_to_async
@@ -25,3 +27,11 @@ def get_room_or_error(room_id, user) -> PrivateChatRoom:
             return room
         else:
             raise RuntimeError("You are not a friend")
+
+
+@database_sync_to_async
+def get_user_info(room: PrivateChatRoom, user) -> dict:
+    """Function to return serialized user data"""
+    other_user = room.user2 if room.user1_id == user.id else room.user1
+    serializer = LazyAccountEncoder()
+    return serializer.serialize([other_user])[0]

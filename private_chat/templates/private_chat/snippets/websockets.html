@@ -1,3 +1,5 @@
+{% load static %}
+
 <script type="text/javascript">
   (function () {
     console.log("Running websocket");
@@ -7,27 +9,9 @@
 
     const friendContainerDiv = document.getElementsByClassName("friend-container");
 
-    const getPrivateChatID = (e) => {
-      const username = e.currentTarget.getAttribute("data-username");
-      console.log("Get room id", username);
-      const payload = {
-        "csrfmiddlewaretoken": "{{ csrf_token }}",
-        "user_2": username
-      };
-
-      $.ajax({
-        type: "POST",
-        dataType: "json",
-        url: "{% url 'private_chat:private_room_id' %}",
-        data: payload,
-        timeout: 5000,
-        success: (data) => {
-          console.log(data);
-        },
-        error: (error) => {
-          console.log(error);
-        }
-      })
+    const sendData = (data) => {
+      console.log("SENDING", data);
+      websocket.send(JSON.stringify(data));
     }
 
     const closeWebSocket = () => {
@@ -57,10 +41,10 @@
        */
       websocket.onopen = () => {
         console.log("Opening websocket");
-        websocket.send(JSON.stringify({
+        sendData({
           "command": "JOIN",
-          "room": roomId
-        }))
+          "room_id": roomId
+        });
       }
 
       /*
@@ -81,16 +65,62 @@
       ###################### ON MESSAGE #######################
        */
       websocket.onmessage = (message) => {
-        console.log("websocket", message);
+        const data = JSON.parse(message.data);
+        console.log("RECEIVED", data)
+        if (data.join) {
+          getUserInfo();
+        }
+        else if (data.user) {
+          handleUserInfo(data.user)
+        }
       }
+    }
 
+    const handleUserInfo = (userData) => {
+      console.log("handleUserInfo", userData);
+      document.getElementById("id_other_username").innerText = userData.username;
+      if (userData.profile_image) {
+        document.getElementById("id_other_user_profile_image").src = userData.profile_image;
+      } else {
+        document.getElementById("id_other_user_profile_image").src = "{% static 'images/dummy_image.png' %}"
+      }
+      document.getElementById("id_user_info_container").href = "{% url 'account:view' username=9999999999 %}".replace("9999999999", userData.username);
+    }
+
+    const getUserInfo = () => {
+      sendData({
+        "command": "USER_INFO",
+        "room_id": roomId
+      });
+    }
+
+    const getPrivateChatID = (e) => {
+      const username = e.currentTarget.getAttribute("data-username");
+      console.log("Get room id", username);
+      const payload = {
+        "csrfmiddlewaretoken": "{{ csrf_token }}",
+        "user_2": username
+      };
+
+      $.ajax({
+        type: "POST",
+        dataType: "json",
+        url: "{% url 'private_chat:private_room_id' %}",
+        data: payload,
+        timeout: 5000,
+        success: (data) => {
+          console.log(data);
+          setUpWebsocket(data.chat_id);
+        },
+        error: (error) => {
+          console.log(error);
+        }
+      })
     }
 
     Array.from(friendContainerDiv).forEach(function(div) {
       div.addEventListener('click', getPrivateChatID);
     });
 
-
-    setUpWebsocket(12);
   })();
 </script>
