@@ -6,6 +6,7 @@ from channels.db import database_sync_to_async
 from account.encoders import LazyAccountEncoder
 from friends.models import FriendList
 
+from utils.exceptions import ClientError
 from .models import PrivateChatRoom
 
 
@@ -18,7 +19,7 @@ def get_room_or_error(room_id, user) -> PrivateChatRoom:
             id=room_id
         )
     except PrivateChatRoom.DoesNotExist:
-        raise RuntimeError("Invalid room")
+        raise ClientError("INVALID_ROOM", "Invalid room")
     else:
         # Check if other user in room is currently friend
         other_id = room.user2_id if room.user1_id == user.id else room.user1_id
@@ -26,7 +27,7 @@ def get_room_or_error(room_id, user) -> PrivateChatRoom:
                 .exists():
             return room
         else:
-            raise RuntimeError("You are not a friend")
+            raise ClientError("NOT_A_FRIEND", "You are not a friend")
 
 
 @database_sync_to_async

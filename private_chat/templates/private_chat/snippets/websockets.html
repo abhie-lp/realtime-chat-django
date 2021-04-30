@@ -14,6 +14,11 @@
       websocket.send(JSON.stringify(data));
     }
 
+    const showClientErrorModal = (message) => {
+      document.getElementById("id_client_error_modal_body").innerText = message;
+      document.getElementById("id_trigger_client_error_modal").click();
+    }
+
     const closeWebSocket = () => {
       if (websocket !== null && websocket !== undefined) {
         websocket.close();
@@ -72,6 +77,8 @@
         }
         else if (data.user) {
           handleUserInfo(data.user)
+        } else if (data.error) {
+          showClientErrorModal(data.message);
         }
       }
     }

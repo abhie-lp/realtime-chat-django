@@ -1,6 +1,7 @@
 """Websocket consumers for private_chat app"""
 
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
+from utils.exceptions import ClientError
 from .websockets import get_user_info, get_room_or_error
 
 
@@ -40,8 +41,8 @@ class PrivateChatConsumer(AsyncJsonWebsocketConsumer):
                 room = await get_room_or_error(room_id, logged_user)
                 user_info = await get_user_info(room, logged_user)
                 await self.send_user_info(user_info)
-        except Exception as e:
-            raise e
+        except ClientError as e:
+            await self.handle_client_error(e)
 
     async def disconnect(self, code):
         """Called when websocket closes"""
@@ -86,3 +87,10 @@ class PrivateChatConsumer(AsyncJsonWebsocketConsumer):
         await self.send_json({
             "user": user_details
         })
+
+    async def handle_client_error(self, e: ClientError):
+        """Called on ClientError"""
+        error = {"error": e.code}
+        if e.message:
+            error["message"] = e.message
+            await self.send_json(error)
