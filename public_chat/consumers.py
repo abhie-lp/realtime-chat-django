@@ -8,9 +8,9 @@ from channels.generic.websocket import AsyncJsonWebsocketConsumer
 from .constants import MSG_TYPE_MESSAGE, MSG_TYPE_CONNECTED_USERS_COUNT
 from .models import PublicChatRoom
 from .websockets import connect_user, disconnect_user, get_room_or_error, \
-    chat_timestamp, create_new_public_room_chat, get_room_chats, \
-    get_connected_users_count
+    create_new_public_room_chat, get_room_chats, get_connected_users_count
 from utils.exceptions import ClientError
+from utils.timestamp import humanize_or_normal
 
 User = get_user_model()
 
@@ -99,7 +99,7 @@ class PublicChatConsumer(AsyncJsonWebsocketConsumer):
             "username": event["username"],
             "user_id": event["user_id"],
             "message": event["message"],
-            "natural_timestamp": chat_timestamp(timezone.now())
+            "natural_timestamp": humanize_or_normal(timezone.now())
         })
 
     async def join_room(self, room_id):
