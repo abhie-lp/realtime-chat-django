@@ -5,7 +5,7 @@ from django.core.serializers.python import Serializer
 
 from .constants import MSG_TYPE_MESSAGE
 from .models import PublicChatRoomMessage
-from .websockets import chat_timestamp
+from utils.timestamp import humanize_or_normal
 
 
 class LazyRoomChatMessageEncoder(Serializer):
@@ -19,6 +19,6 @@ class LazyRoomChatMessageEncoder(Serializer):
             "message": obj.content,
             "profile_image": (obj.user.profile_image.url
                               if obj.user.profile_image else None),
-            "natural_timestamp": chat_timestamp(obj.created_at)
+            "natural_timestamp": humanize_or_normal(obj.created_at)
         }
         return dump_object
