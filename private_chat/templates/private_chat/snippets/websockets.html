@@ -19,6 +19,86 @@
       document.getElementById("id_trigger_client_error_modal").click();
     }
 
+    const validateText = str => {
+      const md = window.markdownit({
+        highlight: (str, lang) => {
+          if (lang && hljs.getLanguage(lang)) {
+            try {
+              return "<pre class='hljs'><code>" +
+                hljs.highlight(lang, str, true).value +
+                '</code></pre>';
+            } catch (_) {}
+          }
+          return '<pre class="hljs"><code>' + md.utils.escapeHtml(str) + '</code></pre>';
+        },
+        linkify: true
+      });
+
+      return md.render(str);
+    }
+
+    const createChatMessageElement = (msg, username, profileImage, timestamp, maintainPosition, isNewMessage) => {
+      const chatLog = document.getElementById("id_chat_log");
+
+      const newMessageDiv = document.createElement("div");
+      newMessageDiv.classList.add("d-flex", "flex-row", "message-container");
+
+      const profileImageImg = document.createElement("img");
+      profileImageImg.addEventListener("click", e => selectUserId(username));
+      profileImageImg.classList.add("profile-image", "rounded-circle", "img-fluid");
+      if (profileImage  !== null && profileImageImg !== undefined) {
+        profileImageImg.src = profileImage;
+      } else {
+        profileImageImg.src = "{% static 'images/dummy_image.png' %}";
+      }
+
+      newMessageDiv.appendChild(profileImageImg);
+
+      const div1 = document.createElement("div");
+      div1.classList.add("d-flex", "flex-column");
+
+      const div2 = document.createElement("div");
+      div2.classList.add("d-flex", "flex-row");
+
+      const usernameSpan = document.createElement("span");
+      usernameSpan.innerText = username + ": ";
+      usernameSpan.classList.add("username-span");
+      usernameSpan.addEventListener("click", e => selectUser(username));
+
+      div2.appendChild(usernameSpan);
+
+      const timestampSpan = document.createElement("span");
+      timestampSpan.innerText = timestamp;
+      timestampSpan.classList.add("d-flex", "align-items-center", "timestamp-span");
+
+      div2.appendChild(timestampSpan);
+
+      div1.appendChild(div2)
+
+      const msgP = document.createElement("p");
+      msgP.innerHTML = validateText(msg);
+      msgP.classList.add("msg-p");
+
+      div1.appendChild(msgP);
+
+      newMessageDiv.appendChild(div1);
+
+      if (isNewMessage) {
+        chatLog.insertBefore(newMessageDiv, chatLog.firstChild);
+      } else {
+        chatLog.appendChild(newMessageDiv);
+      }
+
+      if (!maintainPosition) {
+        chatLog.scrollTop = chatLog.scrollHeight;
+      }
+    }
+
+    const appendChatMessage = (data, maintainPosition, isNewMessage) => {
+      const {username, profile_image, message, natural_timestamp} = data;
+      createChatMessageElement(message, username, profile_image, natural_timestamp, maintainPosition, isNewMessage);
+    }
+
     const closeWebSocket = () => {
       if (websocket !== null && websocket !== undefined) {
         websocket.close();
@@ -79,6 +159,8 @@
           handleUserInfo(data.user)
         } else if (data.error) {
           showClientErrorModal(data.message);
+        } else if (data.msg_type == 0) {
+          appendChatMessage(data, false, true);
         }
       }
     }
@@ -129,5 +211,30 @@
       div.addEventListener('click', getPrivateChatID);
     });
 
+    const chatInput = document.getElementById("id_chat_message_input");
+    const chatSubmit = document.getElementById("id_chat_message_submit")
+    chatInput.focus();
+    chatInput.onkeyup = (e) => {
+      if (e.keyCode === 13 && e.shiftKey) {
+        // No need to handle
+      } else if (e.keyCode === 13 && !e.shiftKey) {
+        chatSubmit.click();
+      }
+    }
+
+    chatSubmit.onclick = (e) => {
+      const message = chatInput.value;
+      if (message !== null && message !== undefined && message.trim().length !== 0) {
+        sendData({
+          "command": "SEND",
+          "message": message.trimRight(),
+          "room_id": roomId
+        });
+        chatInput.value = ""
+      } else {
+        alert("Cannot send empty message, enter something");
+        chatInput.value = "";
+      }
+    }
   })();
 </script>

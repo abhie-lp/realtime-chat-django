@@ -1,8 +1,14 @@
 """Websocket consumers for private_chat app"""
 
+from django.utils import timezone
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
+
 from utils.exceptions import ClientError
-from .websockets import get_user_info, get_room_or_error
+from utils.timestamp import humanize_or_normal
+
+from .constants import *
+from .websockets import get_user_info, get_room_or_error, \
+    create_new_private_chat
 
 
 class PrivateChatConsumer(AsyncJsonWebsocketConsumer):
@@ -15,7 +21,7 @@ class PrivateChatConsumer(AsyncJsonWebsocketConsumer):
         await self.accept()
 
         # room_id acts as a check if connected or else None.
-        self.room_id = None
+        self.room = None
 
     async def receive_json(self, content, **kwargs):
         """
@@ -23,18 +29,19 @@ class PrivateChatConsumer(AsyncJsonWebsocketConsumer):
         Check the content to process further
         """
 
-        print("PrivateChatConsumer", "receive_json")
         command = content.get("command", None)
         room_id = content.get("room_id")
         logged_user = self.scope["user"]
+        print("PrivateChatConsumer", "receive_json", command, room_id)
 
         try:
             if command == "JOIN":
                 await self.join_room(room_id)
             elif command == "LEAVE":
-                pass
+                await self.leave_room(room_id)
             elif command == "SEND":
-                pass
+                if len(content["message"].lstrip()) != 0:
+                    await self.send_room(room_id, content["message"])
             elif command == "ROOM_CHATS":
                 pass
             elif command == "USER_INFO":
@@ -47,23 +54,76 @@ class PrivateChatConsumer(AsyncJsonWebsocketConsumer):
     async def disconnect(self, code):
         """Called when websocket closes"""
         print("PrivateChatConsumer", "disconnect")
-        pass
+        if self.room is not None:
+            await self.leave_room(self.room.id)
 
     async def join_room(self, room_id):
         """Called when JOIN command is received in receive_json"""
         print("PrivateChatConsumer", "join_room", room_id)
-        room = await get_room_or_error(room_id, self.scope["user"])
+        self.room = await get_room_or_error(room_id, self.scope["user"])
+
+        # Add to the group
+        await self.channel_layer.group_add(
+            self.room.group_name,
+            self.channel_name
+        )
+
         await self.send_json({
-            "join": room.id
+            "join": room_id
         })
 
     async def leave_room(self, room_id):
         """Called when LEAVE command is received in receive_json"""
         print("PrivateChatConsumer", "leave_room", room_id)
 
+        user = self.scope["user"]
+
+        await self.channel_layer.group_send(
+            self.room.group_name,
+            {
+                "type": "chat.leave",
+                "room_id": self.room.id,
+                "username": user.username,
+                "user_id": user.id,
+                "profile_image": (user.profile_image.url
+                                  if user.profile_image else None)
+            }
+        )
+
+        await self.channel_layer.group_discard(
+            self.room.group_name,
+            self.channel_name
+        )
+
+        self.room = None
+
+        await self.send_json({
+            "leave": room_id
+        })
+
     async def send_room(self, room_id, message):
-        """Called in receive_json to send a message to room_id"""
+        """Called in receive_json to send a message to private room"""
         print("PrivateChatConsumer", "send_json", room_id)
+        if self.room is not None and self.room.id == room_id:
+            user = self.scope["user"]
+
+            # Store the message in DB
+            await create_new_private_chat(self.room, user, message)
+
+            # Transfer the message to client and other user
+            await self.channel_layer.group_send(
+                self.room.group_name,
+                {
+                    "type": "chat.message",
+                    "username": user.username,
+                    "user_id": user.id,
+                    "profile_image": (user.profile_image.url
+                                      if user.profile_image else None),
+                    "message": message
+                }
+            )
+        else:
+            raise ClientError("ROOM_ACCESS_DENIED", "Room access denied")
 
     async def chat_join(self, event):
         """Called when someone has joined the chat"""
@@ -76,6 +136,14 @@ class PrivateChatConsumer(AsyncJsonWebsocketConsumer):
     async def chat_message(self, event):
         """Called when someone has messaged in room"""
         print("PrivateChatConsumer", "chat_message")
+        await self.send_json({
+            "msg_type": MSG_TYPE_MESSAGE,
+            "username": event["username"],
+            "user_id": event["user_id"],
+            "profile_image": event["profile_image"],
+            "message": event["message"],
+            "natural_timestamp": humanize_or_normal(timezone.now())
+        })
 
     async def send_previous_messages(self, messages, new_page_number):
         """Sends previous messages to client"""

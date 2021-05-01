@@ -7,7 +7,7 @@ from account.encoders import LazyAccountEncoder
 from friends.models import FriendList
 
 from utils.exceptions import ClientError
-from .models import PrivateChatRoom
+from .models import PrivateChatRoom, PrivateRoomChat
 
 
 @database_sync_to_async
@@ -36,3 +36,11 @@ def get_user_info(room: PrivateChatRoom, user) -> dict:
     other_user = room.user2 if room.user1_id == user.id else room.user1
     serializer = LazyAccountEncoder()
     return serializer.serialize([other_user])[0]
+
+
+@database_sync_to_async
+def create_new_private_chat(room, user, message):
+    """Create new private chat for the given room and user"""
+    return PrivateRoomChat.objects.create(
+        user=user, room=room, content=message
+    )
