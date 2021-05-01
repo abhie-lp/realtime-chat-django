@@ -94,9 +94,61 @@
       }
     }
 
+    const createConnectedDisconnectedElement = (message, profileImage, username) => {
+      const chatLog = document.getElementById("id_chat_log");
+
+      const newMessageDiv = document.createElement("div");
+      newMessageDiv.classList.add("d-flex", "flex-row", "message-container");
+
+      const profileImageImg = document.createElement("img");
+      profileImageImg.addEventListener("click", e => selectUserId(username));
+      profileImageImg.classList.add("profile-image", "rounded-circle", "img-fluid");
+      if (profileImage  !== null && profileImageImg !== undefined) {
+        profileImageImg.src = profileImage;
+      } else {
+        profileImageImg.src = "{% static 'images/dummy_image.png' %}";
+      }
+
+      newMessageDiv.appendChild(profileImageImg);
+
+      const div1 = document.createElement("div");
+      div1.classList.add("d-flex", "flex-column");
+
+      const div2 = document.createElement("div");
+      div2.classList.add("d-flex", "flex-row");
+
+      const usernameSpan = document.createElement("span");
+      usernameSpan.innerText = message;
+      usernameSpan.classList.add("username-span");
+      usernameSpan.addEventListener("click", e => selectUser(username));
+
+      div2.appendChild(usernameSpan);
+
+      div1.appendChild(div2)
+
+      newMessageDiv.appendChild(div1);
+
+      chatLog.insertBefore(newMessageDiv, chatLog.firstChild);
+    }
+
     const appendChatMessage = (data, maintainPosition, isNewMessage) => {
-      const {username, profile_image, message, natural_timestamp} = data;
-      createChatMessageElement(message, username, profile_image, natural_timestamp, maintainPosition, isNewMessage);
+      const {msg_type, username, profile_image, message, natural_timestamp} = data;
+      switch (msg_type) {
+        case 0:
+          createChatMessageElement(message, username, profile_image, natural_timestamp, maintainPosition, isNewMessage);
+          break;
+
+        case 1:
+          createConnectedDisconnectedElement(message, profile_image, username);
+          break;
+
+        case 2:
+          createConnectedDisconnectedElement(message, profile_image, username);
+          break;
+
+        default:
+          console.log("Unsupported message type.");
+      }
     }
 
     const closeWebSocket = () => {
@@ -159,7 +211,7 @@
           handleUserInfo(data.user)
         } else if (data.error) {
           showClientErrorModal(data.message);
-        } else if (data.msg_type == 0) {
+        } else if ([0, 1, 2].includes(data.msg_type)) {
           appendChatMessage(data, false, true);
         }
       }

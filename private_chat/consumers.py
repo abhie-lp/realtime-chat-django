@@ -72,6 +72,19 @@ class PrivateChatConsumer(AsyncJsonWebsocketConsumer):
             "join": room_id
         })
 
+        if self.scope["user"].is_authenticated:
+            user = self.scope["user"]
+            await self.channel_layer.group_send(
+                self.room.group_name,
+                {
+                    "type": "chat.join",
+                    "room_id": self.room.id,
+                    "username": user.username,
+                    "profile_image": (user.profile_image.url
+                                      if user.profile_image else None)
+                }
+            )
+
     async def leave_room(self, room_id):
         """Called when LEAVE command is received in receive_json"""
         print("PrivateChatConsumer", "leave_room", room_id)
@@ -84,7 +97,6 @@ class PrivateChatConsumer(AsyncJsonWebsocketConsumer):
                 "type": "chat.leave",
                 "room_id": self.room.id,
                 "username": user.username,
-                "user_id": user.id,
                 "profile_image": (user.profile_image.url
                                   if user.profile_image else None)
             }
@@ -128,10 +140,26 @@ class PrivateChatConsumer(AsyncJsonWebsocketConsumer):
     async def chat_join(self, event):
         """Called when someone has joined the chat"""
         print("PrivateChatConsumer", "chat_join", self.scope["user"])
+        if event["username"]:
+            await self.send_json({
+                "msg_type": MSG_TYPE_ENTER,
+                "room_id": event["room_id"],
+                "profile_image": event["profile_image"],
+                "username": event["username"],
+                "message": event["username"] + " connected."
+            })
 
     async def chat_leave(self, event):
         """Called when someone leaves the chat"""
         print("PrivateChatConsumer", "chat_leave")
+        if event["username"]:
+            await self.send_json({
+                "msg_type": MSG_TYPE_LEAVE,
+                "room_id": event["room_id"],
+                "profile_image": event["profile_image"],
+                "username": event["username"],
+                "message": event["username"] + " disconnected."
+            })
 
     async def chat_message(self, event):
         """Called when someone has messaged in room"""
