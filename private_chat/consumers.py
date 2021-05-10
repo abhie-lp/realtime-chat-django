@@ -8,7 +8,7 @@ from utils.timestamp import humanize_or_normal
 
 from .constants import *
 from .websockets import get_user_info, get_room_or_error, \
-    create_new_private_chat
+    create_new_private_chat, get_private_room_chat_messages
 
 
 class PrivateChatConsumer(AsyncJsonWebsocketConsumer):
@@ -43,7 +43,12 @@ class PrivateChatConsumer(AsyncJsonWebsocketConsumer):
                 if len(content["message"].lstrip()) != 0:
                     await self.send_room(room_id, content["message"])
             elif command == "ROOM_CHATS":
-                pass
+                payload: dict = await get_private_room_chat_messages(
+                    await get_room_or_error(room_id, logged_user),
+                    content["page_number"]
+                )
+                await self.send_previous_messages(payload["messages"],
+                                                  payload["new_page_number"])
             elif command == "USER_INFO":
                 room = await get_room_or_error(room_id, logged_user)
                 user_info = await get_user_info(room, logged_user)
@@ -176,6 +181,11 @@ class PrivateChatConsumer(AsyncJsonWebsocketConsumer):
     async def send_previous_messages(self, messages, new_page_number):
         """Sends previous messages to client"""
         print("PrivateChatConsumer", "send_previous_messages")
+        await self.send_json({
+            "messages_payload": "previous_messages",
+            "messages": messages,
+            "new_page_number": new_page_number
+        })
 
     async def send_user_info(self, user_details):
         """Sends the user details to the client"""

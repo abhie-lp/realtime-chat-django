@@ -1,13 +1,18 @@
 """Functions for private_chat app websockets"""
 
 from django.db.models import Q
+from django.core.paginator import Paginator
 from channels.db import database_sync_to_async
+from django.core.serializers.python import Serializer
 
 from account.encoders import LazyAccountEncoder
 from friends.models import FriendList
 
 from utils.exceptions import ClientError
+
+from .constants import DEFAULT_ROOM_CHAT_MESSAGE_PAGE_SIZE
 from .models import PrivateChatRoom, PrivateRoomChat
+from .encoders import LazyPrivateRoomChatEncoder
 
 
 @database_sync_to_async
@@ -44,3 +49,20 @@ def create_new_private_chat(room, user, message):
     return PrivateRoomChat.objects.create(
         user=user, room=room, content=message
     )
+
+
+@database_sync_to_async
+def get_private_room_chat_messages(room, page_number) -> dict:
+    """Get the chats of the private room"""
+    qs = PrivateRoomChat.objects.by_room(room)
+    paginator = Paginator(qs, DEFAULT_ROOM_CHAT_MESSAGE_PAGE_SIZE)
+
+    if page_number <= paginator.num_pages:
+        serializer: Serializer = LazyPrivateRoomChatEncoder()
+        messages = serializer.serialize(
+            paginator.page(page_number).object_list
+        )
+        page_number += 1
+    else:
+        messages = None
+    return {"messages": messages, "new_page_number": page_number}

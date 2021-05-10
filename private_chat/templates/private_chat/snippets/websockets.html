@@ -37,6 +37,12 @@
       return md.render(str);
     }
 
+    const selectUser = (username) => {
+      const url = "{% url 'account:view' username=99999999 %}".replace("99999999", username);
+      const wyndow = window.open(url);
+      wyndow.focus();
+    }
+
     const createChatMessageElement = (msg, username, profileImage, timestamp, maintainPosition, isNewMessage) => {
       const chatLog = document.getElementById("id_chat_log");
 
@@ -155,8 +161,43 @@
       if (websocket !== null && websocket !== undefined) {
         websocket.close();
         websocket = null;
+        clearChatLog();
+        setPageNumber(1);
       }
     };
+
+    const clearChatLog = () => {
+      document.getElementById("id_chat_log").innerHTML = "";
+    }
+
+    const setPageNumber = (pageNumber) => {
+      document.getElementById("id_page_number").innerText = pageNumber;
+    }
+
+    const setPaginationExhausted = () => {
+      setPageNumber(-1);
+    }
+
+    const getPreviousChatMessages = () => {
+      const pageNumber = Number.parseInt(document.getElementById("id_page_number").innerText);
+      if (pageNumber !== -1) {
+        setPageNumber(-1)
+        sendData({
+          "command": "ROOM_CHATS",
+          "room_id": roomId,
+          "page_number": pageNumber
+        })
+      }
+    }
+
+    const handleMessagesPayload = (messages, newPageNumber) => {
+      if (messages !== null && messages !== undefined && messages.length !== 0) {
+        setPageNumber(newPageNumber);
+        messages.forEach((message) => {
+          appendChatMessage(message, true, false);
+        })
+      }
+    }
 
     const setUpWebsocket = (room_id) => {
       console.log("setUpWebsocket", room_id);
@@ -204,15 +245,27 @@
       websocket.onmessage = (message) => {
         const data = JSON.parse(message.data);
         console.log("RECEIVED", data)
+
         if (data.join) {
+          // Handle join
           getUserInfo();
-        }
-        else if (data.user) {
+
+          // Get previous chat messages between the users
+          getPreviousChatMessages();
+        } else if (data.user) {
+
+          // Handle data sent by user
           handleUserInfo(data.user)
         } else if (data.error) {
+
+          // Handle error from server
           showClientErrorModal(data.message);
         } else if ([0, 1, 2].includes(data.msg_type)) {
+
+          // Handle message types
           appendChatMessage(data, false, true);
+        } else if (data.messages_payload) {
+          handleMessagesPayload(data.messages, data.new_page_number);
         }
       }
     }
