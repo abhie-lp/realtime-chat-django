@@ -9,6 +9,9 @@
 
     const friendContainerDiv = document.getElementsByClassName("friend-container");
 
+    // To highlight the selected user to chat.
+    let highlightedChat = null;
+
     const sendData = (data) => {
       console.log("SENDING", data);
       websocket.send(JSON.stringify(data));
@@ -341,7 +344,17 @@
     }
 
     Array.from(friendContainerDiv).forEach(function(div) {
-      div.addEventListener('click', getPrivateChatID);
+      div.addEventListener('click', (e) => {
+        getPrivateChatID(e);
+
+        // Highlight the current selected user.
+        if (highlightedChat !== null && highlightedChat != undefined) {
+          highlightedChat.classList.remove("highlight");
+        }
+
+        highlightedChat = e.currentTarget;
+        highlightedChat.classList.add("highlight");
+      });
     });
 
     const chatInput = document.getElementById("id_chat_message_input");
