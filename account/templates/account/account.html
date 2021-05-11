@@ -204,7 +204,7 @@
 
           {% if is_friend %}
             <div class="d-flex flex-row align-items-center btn btn-primary m-2 px-4"
-                 onclick="createOrReturnPrivateChat('{{ account.username }}')">
+                 onclick="startChatWithUser('{{ account.username }}')">
               <span class="material-icons m-auto">message</span>
               <span class="message-btn-text m-auto pl-2">Message</span>
             </div>
@@ -224,7 +224,7 @@
   {% include 'friends/snippets/decline_friend_request.html' %}
   {% include 'friends/snippets/cancel_friend_request.html' %}
   {% include 'friends/snippets/remove_friend.html' %}
-  {#% include 'chat/create_or_return_private_chat.html' %#}
+  {% include 'account/snippets/start_chat_with_friend.html' %}
   <script type="text/javascript">
 
     function onFriendRequestSent() {

@@ -1,0 +1,6 @@
+<script type="text/javascript">
+  const startChatWithUser = (username) => {
+    const url = "{% url 'private_chat:chat' %}?meeting-with=" + username;
+    window.location.replace(url);
+  }
+</script>

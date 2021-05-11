@@ -382,5 +382,21 @@
         chatInput.value = "";
       }
     }
+
+    const querySearch = window.location.search;
+    const queryParams = new URLSearchParams(querySearch);
+    const meetingWith = queryParams.get("meeting-with");
+
+    // Check if URL has meeting-with parameter present
+    if (meetingWith !== null && meetingWith !== undefined) {
+
+      // Query all the divs to check for the username value of meeting-with parameter
+      for (div of Array.from(friendContainerDiv)) {
+        if (div.getAttribute("data-username") === meetingWith) {
+          div.click();
+          break
+        }
+      }
+    }
   })();
 </script>

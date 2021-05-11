@@ -72,7 +72,7 @@
                 <div class="card-center px-2">
                   <h4 class="card-title">{{ account.0.username }}</h4>
                   {% if account.1 %}
-                    <p class="card-text"><a href="#" onclick="createOrReturnPrivateChat('{{ account.0.username }}')">Send a
+                    <p class="card-text"><a href="#" onclick="startChatWithUser('{{ account.0.username }}')">Send a
                       Message</a></p>
                   {% endif %}
 
@@ -131,9 +131,5 @@
 {% endblock content %}
 
 {% block page_script %}
-  <script type="text/javascript">
-    function createOrReturnPrivateChat(user_id) {
-      // Just a placeholder
-    }
-  </script>
+  {% include 'account/snippets/start_chat_with_friend.html' %}
 {% endblock page_script %}

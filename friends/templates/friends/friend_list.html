@@ -75,7 +75,7 @@
                   <h4 class="card-title">{{ friend.0.username|truncatechars:50 }}</h4>
                 </a>
                 {% if friend.1 %}
-                  <a href="#" onclick="createOrReturnPrivateChat('{{ friend.0.id }}')">Send a Message</a>
+                  <a href="#" onclick="startChatWithUser('{{ friend.0.username }}')">Send a Message</a>
                 {% endif %}
 
               </div>
@@ -124,8 +124,8 @@
     </div>
 
   </div>
-
-  {#%  include 'chat/create_or_return_private_chat.html' %#}
-
-
 {% endblock content %}
+
+{% block page_script %}
+  {%  include 'account/snippets/start_chat_with_friend.html' %}
+{% endblock page_script %}
