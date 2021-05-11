@@ -163,6 +163,7 @@
         websocket = null;
         clearChatLog();
         setPageNumber(1);
+        disableChatLogScrollListener();
       }
     };
 
@@ -197,6 +198,21 @@
           appendChatMessage(message, true, false);
         })
       }
+    }
+
+    const chatLogScrollListener = (e) => {
+      const chatLog = document.getElementById("id_chat_log");
+      if ((Math.abs(chatLog.scrollTop) + 1) >= (chatLog.scrollHeight - chatLog.offsetHeight)) {
+        getPreviousChatMessages();
+      }
+    }
+
+    const enableChatLogScrollListener = () => {
+      document.getElementById("id_chat_log").addEventListener("scroll", chatLogScrollListener);
+    }
+
+    const disableChatLogScrollListener = () => {
+      document.getElementById("id_chat_log").removeEventListener("scroll", chatLogScrollListener);
     }
 
     const setUpWebsocket = (room_id) => {
@@ -249,6 +265,7 @@
         if (data.join) {
           // Handle join
           getUserInfo();
+          enableChatLogScrollListener();
 
           // Get previous chat messages between the users
           getPreviousChatMessages();
