@@ -182,6 +182,7 @@
     const getPreviousChatMessages = () => {
       const pageNumber = Number.parseInt(document.getElementById("id_page_number").innerText);
       if (pageNumber !== -1) {
+        showChatLogLoadingSpinner(true);
         setPageNumber(-1)
         sendData({
           "command": "ROOM_CHATS",
@@ -197,6 +198,15 @@
         messages.forEach((message) => {
           appendChatMessage(message, true, false);
         })
+      }
+    }
+
+    const showChatLogLoadingSpinner = (toDisplay) => {
+      const spinner = document.getElementById("id_chatroom_loading_spinner");
+      if (toDisplay) {
+        spinner.style.display = "block"
+      } else {
+        spinner.style.display = "none"
       }
     }
 
@@ -282,6 +292,7 @@
           // Handle message types
           appendChatMessage(data, false, true);
         } else if (data.messages_payload) {
+          showChatLogLoadingSpinner(false);
           handleMessagesPayload(data.messages, data.new_page_number);
         }
       }
