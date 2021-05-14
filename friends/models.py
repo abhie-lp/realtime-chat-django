@@ -1,7 +1,9 @@
 from django.db import models
 from django.conf import settings
+from django.contrib.contenttypes.fields import GenericRelation
 
 from account.models import Account
+from notifications.models import Notification
 from private_chat.utils import get_or_create_chat
 
 
@@ -14,6 +16,8 @@ class FriendList(models.Model):
     friends = models.ManyToManyField(
         settings.AUTH_USER_MODEL, blank=True, related_name="friends"
     )
+
+    notifications = GenericRelation(Notification)
 
     def __str__(self):
         return self.user.username
@@ -72,6 +76,8 @@ class FriendRequest(models.Model):
     )
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    notifications = GenericRelation(Notification)
 
     def __str__(self):
         return f"{self.sender.username} --> {self.receiver.username}"
