@@ -49,6 +49,7 @@ INSTALLED_APPS += [
     "personal.apps.PersonalConfig",
     "public_chat.apps.PublicChatConfig",
     "private_chat.apps.PrivateChatConfig",
+    "notifications.apps.NotificationsConfig",
 ]
 
 MIDDLEWARE = [
