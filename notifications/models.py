@@ -18,9 +18,19 @@ class Notification(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     read = models.BooleanField(default=False)
 
-    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    content_type = models.ForeignKey(
+        ContentType, on_delete=models.CASCADE,
+        limit_choices_to={"model__in": (
+            "friendrequest", "friendlist", "privatechatroom", "privateroomchat"
+        )}
+    )
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey()
 
     def __str__(self):
         return f"{self.by_user.username} -> {self.for_user.username}"
+
+    @property
+    def get_model(self):
+        """Return the model name for which the notification is created"""
+        return self.content_type.model
