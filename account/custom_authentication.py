@@ -20,7 +20,7 @@ class CaseInsensitiveModelBackend(ModelBackend):
                 **{case_insensitive_username_field: username}
             )
         except UserModel.DoesNotExist:
-            UserModel.set_password(password)
+            return
         else:
             if user.check_password(password) \
                     and self.user_can_authenticate(user):
