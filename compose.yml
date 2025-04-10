@@ -1,0 +1,46 @@
+services:
+  chatapp:
+    container_name: chatapp
+    image: chatapp_image
+    build: .
+    env_file: ".env"
+    ports:
+     - "8000:80"
+    volumes:
+      - .:/app
+    depends_on:
+      db:
+        condition: service_healthy
+        restart: true
+      redis:
+        condition: service_started
+      
+
+  db:
+    container_name: chatapp-db
+    image: postgres:17-alpine
+    env_file: ".env"
+    ports:
+      - "5432:5432"
+    restart: "always"
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+    volumes:
+      - postgres_data:/var/lib/postgres_data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  redis:
+    container_name: chatapp-redis
+    image: redis:7.4-alpine
+    ports:
+      - "6379:6379"
+
+volumes:
+  postgres_data:
