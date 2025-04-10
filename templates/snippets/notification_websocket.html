@@ -14,28 +14,28 @@
     ###################### ON OPEN #######################
      */
     websocket.onopen = () => {
-      console.log("Websocket onopen");
+      console.log("Notification Websocket onopen");
     }
 
     /*
     ###################### ON CLOSE #######################
      */
     websocket.onclose = () => {
-      console.log("Websocket onclose");
+      console.log("Notification Websocket onclose");
     }
 
     /*
     ###################### ON ERROR #######################
      */
     websocket.onerror = (e) => {
-      console.log("Websocket onerror", e)
+      console.log("Notification Websocket onerror", e)
     }
 
     /*
     ###################### ON MESSAGE #######################
      */
     websocket.onmessage = (message) => {
-      console.log("Websocket onmessage");
+      console.log("Notification Websocket onmessage");
       const data = JSON.parse(message.data);
     }
   })()

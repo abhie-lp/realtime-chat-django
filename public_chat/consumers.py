@@ -64,7 +64,7 @@ class PublicChatConsumer(AsyncJsonWebsocketConsumer):
 
     async def send_room_message(self, room_id, message):
         """Called by receive_json when someone sends a message to a room"""
-        print("PblicChatConsumer", "send_room_message")
+        print("PublicChatConsumer", "send_room_message")
         user = self.scope["user"]
 
         if self.room_id is not None:

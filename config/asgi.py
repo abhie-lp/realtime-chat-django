@@ -22,7 +22,7 @@ application = ProtocolTypeRouter({
         AuthMiddlewareStack(
             URLRouter([
                 path(
-                    "public-chat/<int:room_id>/", PublicChatConsumer.as_asgi()
+                    "public-chat/", PublicChatConsumer.as_asgi()
                 ),
                 path(
                     "private-chat/<int:room_id>/",
