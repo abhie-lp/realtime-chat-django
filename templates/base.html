@@ -1,43 +1,43 @@
 {% load static %}
-
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport"
-        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
-  <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>Realtime Chat - Django</title>
-  <link rel="stylesheet" type="text/css" href="{% static 'bootstrap/css/bootstrap.min.css' %}"/>
-  <link href="https://fonts.googleapis.com/css2?family=Material+Icons" rel="stylesheet">
-  {% include 'snippets/base_css.html' %}
-  {% block page_style %}
-  {% endblock page_style %}
-</head>
-<body>
-
-  <!-- header -->
-  {% include "snippets/header.html" %}
-  <!-- end header -->
-
-
-
-  <!-- body -->
-  <div class="main">
-    {% block content %}
-    {% endblock content %}
-  </div>
-  <!-- end body -->
-
-  <!-- footer -->
-  {% include 'snippets/footer.html' %}
-  <!-- end footer -->
-
-  <script rel="script" type="text/javascript" src="{% static 'bootstrap/js/jquery-3.5.1.min.js' %}"></script>
-  <script rel="script" type="text/javascript" src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
-  {% include 'snippets/base_js.html' %}
-  {% include 'snippets/notification_websocket.html' %}
-  {% block page_script %}
-  {% endblock page_script %}
-</body>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport"
+              content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
+        <title>Realtime Chat - Django</title>
+        <link rel="stylesheet"
+              type="text/css"
+              href="{% static 'bootstrap/css/bootstrap.min.css' %}" />
+        <link href="https://fonts.googleapis.com/css2?family=Material+Icons"
+              rel="stylesheet">
+        {% include 'snippets/base_css.html' %}
+        {% block page_style %}
+        {% endblock page_style %}
+    </head>
+    <body>
+        <!-- header -->
+        {% include "snippets/header.html" %}
+        <!-- end header -->
+        <!-- body -->
+        <div class="main">
+            {% block content %}
+            {% endblock content %}
+        </div>
+        <!-- end body -->
+        <!-- footer -->
+        {% include 'snippets/footer.html' %}
+        <!-- end footer -->
+        <script rel="script"
+                type="text/javascript"
+                src="{% static 'bootstrap/js/jquery-3.7.1.min.js' %}"></script>
+        <script rel="script"
+                type="text/javascript"
+                src="{% static 'bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+        {% include 'snippets/base_js.html' %}
+        {% include 'snippets/notification_websocket.html' %}
+        {% block page_script %}
+        {% endblock page_script %}
+    </body>
 </html>
