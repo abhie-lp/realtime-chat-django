@@ -10,8 +10,8 @@ from account.models import Account
 
 class RegistrationForm(UserCreationForm):
     """Create the registration form"""
-    email = forms.EmailField(max_length=255,
-                             help_text="Required. Add a valid email.")
+
+    email = forms.EmailField(max_length=255, help_text="Required. Add a valid email.")
 
     class Meta:
         model = Account
@@ -19,32 +19,31 @@ class RegistrationForm(UserCreationForm):
 
     def clean_email(self):
         """Run check on email"""
-        email = self.cleaned_data["email"].lower()
-        try:
-            Account.objects.get(email=email)
-        except Account.DoesNotExist:
+        email = self.cleaned_data["email"]
+        if not Account.objects.filter(email__iexact=email).exists():
             return email
         else:
-            raise forms.ValidationError(f"Email {email} is already in use.")
+            raise forms.ValidationError(f"Email {email} is already in use")
 
     def clean_username(self):
         """Run check on username"""
         username = self.cleaned_data["username"]
-        try:
-            Account.objects.get(username=username)
-        except Account.DoesNotExist:
+        if not Account.objects.filter(username__iexact=username).exists():
             return username
-        raise forms.ValidationError(f"Username {username} already in use.")
+        else:
+            raise forms.ValidationError(f"Username {username} already in use")
 
 
 class LoginForm(forms.Form):
     """Create a login form"""
+
     password = forms.CharField(label="Password", widget=forms.PasswordInput)
     email = forms.EmailField(label="Email")
 
 
 class AccountUpdateForm(forms.ModelForm):
     """Form to update user account details"""
+
     x = forms.FloatField(widget=forms.HiddenInput, initial=-1)
     y = forms.FloatField(widget=forms.HiddenInput, initial=-1)
     width = forms.FloatField(widget=forms.HiddenInput, initial=-1)
@@ -67,9 +66,7 @@ class AccountUpdateForm(forms.ModelForm):
 
             image = Image.open(account.profile_image)
             cropped_image = image.crop((x, y, width + x, height + y))
-            cropped_image.save(
-                account.profile_image.path, optimize=True, quality=85
-            )
+            cropped_image.save(account.profile_image.path, optimize=True, quality=85)
         else:
             account = super(AccountUpdateForm, self).save(commit=commit)
         return account

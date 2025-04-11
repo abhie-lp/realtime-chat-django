@@ -1,8 +1,9 @@
+from asgiref.sync import sync_to_async
 from django.conf import settings
 from django.http import HttpResponse, HttpResponseNotFound
 from django.db.models import Q
 from django.shortcuts import render, redirect
-from django.contrib.auth import login, authenticate, logout
+from django.contrib.auth import alogin, aauthenticate, alogout
 from django.contrib.auth.decorators import login_required
 
 from .forms import RegistrationForm, LoginForm, AccountUpdateForm
@@ -12,48 +13,48 @@ from friends.models import FriendRequest, FriendList
 from utils.search import binary_search
 
 
-def register_view(request):
+async def register_view(request):
     """View to register new user"""
-    if request.user.is_authenticated:
-        return HttpResponse(
-            f"You are already authenticated with {request.user.email}"
-        )
+    if (user := await request.auser()) and user.is_authenticated:
+        return HttpResponse(f"You are already authenticated with {user.email}")
     if request.method == "POST":
         form = RegistrationForm(request.POST)
-        if form.is_valid():
-            form.save()
-            account = authenticate(email=form.cleaned_data["email"].lower(),
-                                   password=form.cleaned_data["password1"])
+        if await sync_to_async(form.is_valid)():
+            await sync_to_async(form.save)()
+            account = await aauthenticate(
+                email=form.cleaned_data["email"].lower(),
+                password=form.cleaned_data["password1"],
+            )
             if account.is_active:
-                login(request, account)
+                await alogin(request, account)
             if request.GET.get("next"):
                 return redirect(request.GET.get("next"))
             return redirect("home")
     else:
         form = RegistrationForm()
-    return render(request, "account/register.html",
-                  {"registration_form": form})
+    return render(request, "account/register.html", {"registration_form": form})
 
 
-def logout_view(request):
+async def logout_view(request):
     """Log out user out of the website"""
-    logout(request)
+    await alogout(request)
     return redirect("home")
 
 
-def login_view(request):
+async def login_view(request):
     """Login view to authenticate the user using email and password"""
-    if request.user.is_authenticated:
+    if (await request.auser()).is_authenticated:
         return redirect("home")
 
     if request.method == "POST":
         form = LoginForm(request.POST)
-        if form.is_valid():
-            user = authenticate(email=form.cleaned_data["email"],
-                                password=form.cleaned_data["password"])
+        if await sync_to_async(form.is_valid)():
+            user = await aauthenticate(
+                email=form.cleaned_data["email"], password=form.cleaned_data["password"]
+            )
             if user:
                 if user.is_active:
-                    login(request, user)
+                    await alogin(request, user)
                     if request.GET.get("next"):
                         return redirect(request.GET.get("next"))
                     return redirect("home")
@@ -86,19 +87,23 @@ def account_view(request, username):
             if not is_friend:
                 # Check if friend request has been sent by any of them
                 friend_request: FriendRequest = FriendRequest.objects.filter(
-                    Q(sender=request_user, receiver=account) |
-                    Q(sender=account, receiver=request_user),
-                    is_active=True
+                    Q(sender=request_user, receiver=account)
+                    | Q(sender=account, receiver=request_user),
+                    is_active=True,
                 ).last()
                 if friend_request:
                     # Check if request is sent by sign-in user to other account
-                    if friend_request.sender == request_user and \
-                            friend_request.receiver == account:
+                    if (
+                        friend_request.sender == request_user
+                        and friend_request.receiver == account
+                    ):
                         request_status = "SENT"
                     # Check if request is received by sign-in user from other
                     # account
-                    elif friend_request.sender == account and \
-                            friend_request.receiver == request_user:
+                    elif (
+                        friend_request.sender == account
+                        and friend_request.receiver == request_user
+                    ):
                         request_status = "RECEIVED"
                     pending_friend_request_id = friend_request.pk
         elif is_self:
@@ -112,7 +117,7 @@ def account_view(request, username):
             "request_status": request_status,
             "friends_count": account.friends.count(),
             "friend_requests": friend_requests,
-            "pending_friend_request_id": pending_friend_request_id
+            "pending_friend_request_id": pending_friend_request_id,
         }
     return render(request, "account/account.html", ctx)
 
@@ -123,16 +128,20 @@ def account_search_view(request):
     ctx = {}
     search_query = request.GET.get("q")
     if len(search_query) > 0:
-        search_results = Account.objects.filter(
-            Q(email__icontains=search_query) |
-            Q(username__icontains=search_query)
-        ).only("id", "email", "username", "profile_image").distinct()
+        search_results = (
+            Account.objects.filter(
+                Q(email__icontains=search_query) | Q(username__icontains=search_query)
+            )
+            .only("id", "email", "username", "profile_image")
+            .distinct()
+        )
 
         # [(account1: Account, friendship_status_with_me: bool), ...]
         if request.user.is_authenticated:
             my_friends = tuple(
-                FriendList.objects.get(user=request.user).friends
-                .order_by("pk").values_list("pk", flat=True)
+                FriendList.objects.get(user=request.user)
+                .friends.order_by("pk")
+                .values_list("pk", flat=True)
             )
             accounts = [
                 (account, binary_search(account.pk, my_friends))
@@ -150,9 +159,7 @@ def account_update_view(request):
     """View to updated account details"""
     ctx = {"DATA_UPLOAD_MAX_SIZE": settings.DATA_UPLOAD_MAX_MEMORY_SIZE}
     if request.method == "POST":
-        form = AccountUpdateForm(
-            request.POST, request.FILES, instance=request.user
-        )
+        form = AccountUpdateForm(request.POST, request.FILES, instance=request.user)
         if form.is_valid():
             form.save()
             return redirect("account:view", request.user.username)

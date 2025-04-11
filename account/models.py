@@ -2,8 +2,7 @@ from os import path
 from datetime import datetime
 
 from django.db import models
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, \
-    PermissionsMixin
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 
 
 class MyAccountManager(BaseUserManager):
@@ -15,9 +14,8 @@ class MyAccountManager(BaseUserManager):
             raise ValueError("Users must have an email address")
         if not username:
             raise ValueError("Users must have a username")
-        user = self.model(
-            email=self.normalize_email(email),
-            username=username
+        user: AbstractBaseUser = self.model(
+            email=self.normalize_email(email), username=username
         )
         user.set_password(password)
         user.save(using=self._db)
@@ -33,15 +31,18 @@ class MyAccountManager(BaseUserManager):
         return user
 
 
-def get_profile_image_filepath(self, filename: str):
+def get_profile_image_filepath(account: "Account", filename: str):
     """Return the profile image path for the user"""
-    return f"profile_images/{self.username}/" \
-           f"profile_image-{datetime.now().strftime('%Y-%m-%d_%H_%M')}" \
-           f".{filename.rsplit('.', 1)[1]}"
+    return (
+        f"profile_images/{account.username}/"
+        f"profile_image-{datetime.now().strftime('%Y-%m-%d_%H_%M')}"
+        f".{filename.rsplit('.', 1)[1]}"
+    )
 
 
 class Account(AbstractBaseUser):
     """Model for user"""
+
     email = models.EmailField("email", max_length=60, unique=True)
     username = models.CharField(max_length=30, unique=True)
     date_joined = models.DateTimeField("date_joined", auto_now_add=True)
@@ -51,8 +52,7 @@ class Account(AbstractBaseUser):
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
     profile_image = models.ImageField(
-        max_length=255,  null=True, blank=True,
-        upload_to=get_profile_image_filepath
+        max_length=255, null=True, blank=True, upload_to=get_profile_image_filepath
     )
     hide_email = models.BooleanField(default=True)
 
