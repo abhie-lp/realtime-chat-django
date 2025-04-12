@@ -69,9 +69,9 @@ class FriendList(models.Model):
             content_type=ContentType.objects.get_for_model(self)
         )
 
-    def is_friend(self, user):
+    async def is_friend(self, user):
         """Check if user is already friend"""
-        return user.pk in self.friends.values_list("pk", flat=True)
+        return await self.friends.filter(pk=user.pk).aexists()
 
 
 class FriendRequest(models.Model):

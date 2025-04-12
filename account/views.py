@@ -67,10 +67,11 @@ async def login_view(request):
     return render(request, "account/login.html", {"login_form": form})
 
 
-def account_view(request, username):
+async def account_view(request, username):
     """View to show details of user account"""
+    request.user = await request.auser()
     try:
-        account = Account.objects.get(username=username)
+        account = await Account.objects.aget(username=username)
     except Account.DoesNotExist:
         return HttpResponseNotFound("The user doesn't exist.")
     else:
@@ -83,14 +84,14 @@ def account_view(request, username):
 
         if request_user.is_authenticated and not is_self:
             # Check if client user is friend with account opened
-            is_friend = request_user.friend_list.is_friend(account)
+            is_friend = await (await sync_to_async(lambda: request_user.friend_list)()).is_friend(account)
             if not is_friend:
                 # Check if friend request has been sent by any of them
-                friend_request: FriendRequest = FriendRequest.objects.filter(
+                friend_request: FriendRequest = await FriendRequest.objects.filter(
                     Q(sender=request_user, receiver=account)
                     | Q(sender=account, receiver=request_user),
                     is_active=True,
-                ).last()
+                ).select_related("sender", "receiver").alast()
                 if friend_request:
                     # Check if request is sent by sign-in user to other account
                     if (
@@ -107,15 +108,15 @@ def account_view(request, username):
                         request_status = "RECEIVED"
                     pending_friend_request_id = friend_request.pk
         elif is_self:
-            friend_requests = FriendRequest.objects.filter(
+            friend_requests = await FriendRequest.objects.filter(
                 receiver=request_user, is_active=True
-            ).count()
+            ).acount()
         ctx = {
             "account": account,
             "is_self": is_self,
             "is_friend": is_friend,
             "request_status": request_status,
-            "friends_count": account.friends.count(),
+            "friends_count": await account.friends.acount(),
             "friend_requests": friend_requests,
             "pending_friend_request_id": pending_friend_request_id,
         }

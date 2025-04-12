@@ -100,7 +100,7 @@
                    style="width: 350px; height: 350px"
               >
             </div>
-            <p class="mt-4 mb-1 field-heading">Email</p>
+            <p class="mt-4 mb-1 field-heading text-dark fs-3">Email</p>
             {% if is_self %}
               <h5>{{ account.email }}</h5>
             {% else %}
@@ -110,14 +110,14 @@
                 <h5>{{ account.email }}</h5>
               {% endif %}
             {% endif %}
-            <p class="mt-4 mb-1 field-heading">Username</p>
+            <p class="mt-4 mb-1 field-heading fs-3">Username</p>
             <h5>{{ account.username }}</h5>
 
             <!-- If Auth user is viewing their own profile -->
             {% if is_self %}
               <a class="mt-4 btn btn-primary" href="{% url 'account:update' %}">Update</a>
               <div class="d-flex flex-column mt-4">
-                <a class="m-auto" href="{% url 'password_change' %}">Change password</a>
+                <a class="m-auto link-offset-2 link-offset-3-hover link-underline link-underline-opacity-0 link-underline-opacity-75-hover" href="{% url 'password_change' %}">Change password</a>
               </div>
             {% endif %}
           </div>
@@ -131,7 +131,7 @@
           {% if request_status == "RECEIVED" %}
             <div class="card m-2 p-4">
               <div class="d-flex flex-row align-items-center">
-                <span class="friend-text align-items-center mr-2">Accept Friend Request</span>
+                <span class="friend-text align-items-center me-2">Accept Friend Request</span>
                 <span id="id_cancel_{{ account.id }}" class="decline-friend-request material-icons p-1"
                       onclick='triggerDeclineFriendRequest("{{ pending_friend_request_id }}")'>cancel</span>
                 <span id="id_confirm_{{ account.id }}" class="confirm-friend-request material-icons p-1"
@@ -180,7 +180,7 @@
             <div class="d-flex flex-column pt-4">
               <a href="{% url 'friends:friend_list' username=account.username %}">
                 <div class="d-flex flex-row align-items-center justify-content-center icon-container">
-                  <span class="material-icons mr-2 friends-icon">contact_page</span><span
+                  <span class="material-icons me-2 friends-icon">contact_page</span><span
                     class="friend-text">Friends ({{ friends_count }})</span>
                 </div>
               </a>
@@ -195,7 +195,7 @@
               <div class="d-flex flex-column pt-4">
                 <a href="{% url 'friends:friend_requests' %}">
                   <div class="d-flex flex-row align-items-center justify-content-center icon-container">
-                    <span class="material-icons mr-2 person-add-icon">person_add</span><span class="friend-text">Friend Requests ({{ friend_requests }})</span>
+                    <span class="material-icons me-2 person-add-icon">person_add</span><span class="friend-text">Friend Requests ({{ friend_requests }})</span>
                   </div>
                 </a>
               </div>
