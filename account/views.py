@@ -160,13 +160,14 @@ async def account_search_view(request):
 
 
 @login_required()
-def account_update_view(request):
+async def account_update_view(request):
     """View to updated account details"""
     ctx = {"DATA_UPLOAD_MAX_SIZE": settings.DATA_UPLOAD_MAX_MEMORY_SIZE}
+    request.user = await request.auser()
     if request.method == "POST":
         form = AccountUpdateForm(request.POST, request.FILES, instance=request.user)
-        if form.is_valid():
-            form.save()
+        if await sync_to_async(form.is_valid)():
+            await sync_to_async(form.save)()
             return redirect("account:view", request.user.username)
     else:
         form = AccountUpdateForm(instance=request.user)
