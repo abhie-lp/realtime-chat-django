@@ -84,14 +84,20 @@ async def account_view(request, username):
 
         if request_user.is_authenticated and not is_self:
             # Check if client user is friend with account opened
-            is_friend = await (await sync_to_async(lambda: request_user.friend_list)()).is_friend(account)
+            is_friend = await (
+                await sync_to_async(lambda: request_user.friend_list)()
+            ).is_friend(account)
             if not is_friend:
                 # Check if friend request has been sent by any of them
-                friend_request: FriendRequest = await FriendRequest.objects.filter(
-                    Q(sender=request_user, receiver=account)
-                    | Q(sender=account, receiver=request_user),
-                    is_active=True,
-                ).select_related("sender", "receiver").alast()
+                friend_request: FriendRequest = (
+                    await FriendRequest.objects.filter(
+                        Q(sender=request_user, receiver=account)
+                        | Q(sender=account, receiver=request_user),
+                        is_active=True,
+                    )
+                    .select_related("sender", "receiver")
+                    .alast()
+                )
                 if friend_request:
                     # Check if request is sent by sign-in user to other account
                     if (
@@ -123,9 +129,10 @@ async def account_view(request, username):
     return render(request, "account/account.html", ctx)
 
 
-def account_search_view(request):
+async def account_search_view(request):
     """View to search accounts"""
 
+    request.user = await request.auser()
     ctx = {}
     search_query = request.GET.get("q")
     if len(search_query) > 0:
@@ -139,14 +146,11 @@ def account_search_view(request):
 
         # [(account1: Account, friendship_status_with_me: bool), ...]
         if request.user.is_authenticated:
-            my_friends = tuple(
-                FriendList.objects.get(user=request.user)
-                .friends.order_by("pk")
-                .values_list("pk", flat=True)
-            )
+            friend_list = await FriendList.objects.select_related("user").aget(user=request.user)
+            my_friends = await sync_to_async(tuple)(friend_list.friends.order_by("pk").values_list("pk", flat=True))
             accounts = [
                 (account, binary_search(account.pk, my_friends))
-                for account in search_results
+                async for account in search_results
             ]
         else:
             accounts = [(account, False) for account in search_results]
