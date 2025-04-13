@@ -14,19 +14,19 @@ class PublicChatRoom(models.Model):
     def __str__(self):
         return self.title
 
-    def connect_user(self, user):
+    async def connect_user(self, user):
         """Add user if not in users list and return True else False"""
-        if user.id in self.users.values_list("pk", flat=True):
+        if await self.users.filter(pk=user.id).aexists():
             add_status = False
         else:
-            self.users.add(user)
+            await self.users.aadd(user)
             add_status = True
         return add_status
 
-    def disconnect_user(self, user):
+    async def disconnect_user(self, user):
         """Remove user if in users list and return True else False"""
-        if user.id in self.users.values_list("pk", flat=True):
-            self.users.remove(user)
+        if await self.users.filter(pk=user.id).aexists():
+            await self.users.aremove(user)
             remove_status = True
         else:
             remove_status = False

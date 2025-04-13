@@ -1,8 +1,7 @@
 from asgiref.sync import sync_to_async
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render
 from django.http.response import HttpResponseForbidden
 from django.contrib.auth.decorators import login_required
-from django.db import connection
 
 from account.models import Account
 from friends.models import FriendRequest, FriendList

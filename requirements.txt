@@ -4,6 +4,5 @@ psycopg==3.2.*
 psycopg[c]==3.2.*
 Pillow==11.1.*
 djangorestframework==3.16.*
-channels==4.2.*
+channels[daphne]==4.2.*
 channels-redis==4.2.*
-daphne==4.1.*

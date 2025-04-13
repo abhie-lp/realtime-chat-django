@@ -150,7 +150,7 @@
       {% if debug_mode %}
         ws_path = `${ws_scheme}://${window.location.host}/public-chat/`;
       {% else %}
-        ws_path = `${ws_scheme}://${window.location.host}:8001/public-chat/`;
+        ws_path = `${ws_scheme}://${window.location.host}/public-chat/`;
       {% endif %}
 
       const publicChatSocket = new WebSocket(ws_path);

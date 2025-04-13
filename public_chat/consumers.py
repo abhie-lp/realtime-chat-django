@@ -39,7 +39,7 @@ class PublicChatConsumer(AsyncJsonWebsocketConsumer):
         if self.room_id:
             await self.leave_room(self.room_id)
 
-    async def receive_json(self, content, **kwargs):
+    async def receive_json(self, content):
         """Handle the data sent from the client websocket"""
         print("PublicChatConsumer", "receive_json", content)
         command: str = content.get("command", None)
@@ -71,7 +71,7 @@ class PublicChatConsumer(AsyncJsonWebsocketConsumer):
             if str(room_id) != str(self.room_id):
                 raise ClientError("ROOM_ACCESS_DENIED", "Room access denied")
             elif not user.is_authenticated:
-                raise ClientError("AUTH_ERRO", "Not authenticated to join")
+                raise ClientError("AUTH_ERROR", "Not authenticated to join")
         else:
             raise ClientError("ROOM_ACCESS_DENIED", "Room access denied")
 
