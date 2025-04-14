@@ -89,18 +89,13 @@ class PublicChatConsumer(AsyncJsonWebsocketConsumer):
             }
         )
 
-    async def chat_message(self, event):
+    async def chat_message(self, event: dict):
         """Handle when there is a message"""
-
         print("PublicChatConsumer", "chat_message from user", event["user_id"])
-        await self.send_json({
-            "msg_type": MSG_TYPE_MESSAGE,
-            "profile_image": event["profile_image"],
-            "username": event["username"],
-            "user_id": event["user_id"],
-            "message": event["message"],
-            "natural_timestamp": humanize_or_normal(timezone.now())
-        })
+        event["msg_type"] = MSG_TYPE_MESSAGE
+        event["natural_timestamp"] = humanize_or_normal(timezone.now())
+        event.pop("type", None)
+        await self.send_json(event)
 
     async def join_room(self, room_id):
         """Called by receive_json on JOIN command"""
@@ -173,11 +168,8 @@ class PublicChatConsumer(AsyncJsonWebsocketConsumer):
     async def send_room_previous_chats(self, message_data: dict):
         """Sends previous chats of room to client"""
         print("PublicChatConsumer", "send_room_previous_chats")
-        await self.send_json({
-            "messages_payload": "messages_payload",
-            "messages": message_data["messages"],
-            "new_page_number": message_data["new_page_number"]
-        })
+        message_data["messages_payload"] = "messages_payload"
+        await self.send_json(message_data)
 
     async def handle_client_error(self, exception: ClientError):
         """Handle ClientError and send data to client"""
@@ -190,7 +182,6 @@ class PublicChatConsumer(AsyncJsonWebsocketConsumer):
         """Send the number of connected users to the group"""
         print("PublicChatConsumer", "connected_users_count",
               event["connected_users_count"])
-        await self.send_json({
-            "msg_type": MSG_TYPE_CONNECTED_USERS_COUNT,
-            "connected_users_count": event["connected_users_count"]
-        })
+        event.pop("type", None)
+        event["msg_type"] = MSG_TYPE_CONNECTED_USERS_COUNT
+        await self.send_json(event)

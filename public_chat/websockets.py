@@ -37,8 +37,15 @@ def get_room_chats(room, page_number) -> dict:
     """Get paginated public room chats"""
     qs = (
         PublicChatRoomMessage.objects.by_room(room)
-        .select_related("user")
-        .only("user__username", "user__profile_image", "content", "created_at")
+        .select_related("user", "room")
+        .only(
+            "user__username",
+            "user__profile_image",
+            "content",
+            "created_at",
+            "room__id",
+            "room__title",
+        )
     )
     pages = Paginator(qs, DEFAULT_PAGE_SIZE)
 
