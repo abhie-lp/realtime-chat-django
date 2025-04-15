@@ -7,8 +7,12 @@ from utils.exceptions import ClientError
 from utils.timestamp import humanize_or_normal
 
 from .constants import *
-from .websockets import get_user_info, get_room_or_error, \
-    create_new_private_chat, get_private_room_chat_messages
+from .websockets import (
+    get_user_info,
+    get_room_or_error,
+    create_new_private_chat,
+    get_private_room_chat_messages,
+)
 
 
 class PrivateChatConsumer(AsyncJsonWebsocketConsumer):
@@ -45,10 +49,9 @@ class PrivateChatConsumer(AsyncJsonWebsocketConsumer):
             elif command == "ROOM_CHATS":
                 payload: dict = await get_private_room_chat_messages(
                     await get_room_or_error(room_id, logged_user),
-                    content["page_number"]
+                    content["page_number"],
                 )
-                await self.send_previous_messages(payload["messages"],
-                                                  payload["new_page_number"])
+                await self.send_previous_messages(payload)
             elif command == "USER_INFO":
                 room = await get_room_or_error(room_id, logged_user)
                 user_info = await get_user_info(room, logged_user)
@@ -68,14 +71,9 @@ class PrivateChatConsumer(AsyncJsonWebsocketConsumer):
         self.room = await get_room_or_error(room_id, self.scope["user"])
 
         # Add to the group
-        await self.channel_layer.group_add(
-            self.room.group_name,
-            self.channel_name
-        )
+        await self.channel_layer.group_add(self.room.group_name, self.channel_name)
 
-        await self.send_json({
-            "join": room_id
-        })
+        await self.send_json({"join": room_id})
 
         if self.scope["user"].is_authenticated:
             user = self.scope["user"]
@@ -85,9 +83,10 @@ class PrivateChatConsumer(AsyncJsonWebsocketConsumer):
                     "type": "chat.join",
                     "room_id": self.room.id,
                     "username": user.username,
-                    "profile_image": (user.profile_image.url
-                                      if user.profile_image else None)
-                }
+                    "profile_image": (
+                        user.profile_image.url if user.profile_image else None
+                    ),
+                },
             )
 
     async def leave_room(self, room_id):
@@ -102,21 +101,17 @@ class PrivateChatConsumer(AsyncJsonWebsocketConsumer):
                 "type": "chat.leave",
                 "room_id": self.room.id,
                 "username": user.username,
-                "profile_image": (user.profile_image.url
-                                  if user.profile_image else None)
-            }
+                "profile_image": (
+                    user.profile_image.url if user.profile_image else None
+                ),
+            },
         )
 
-        await self.channel_layer.group_discard(
-            self.room.group_name,
-            self.channel_name
-        )
+        await self.channel_layer.group_discard(self.room.group_name, self.channel_name)
 
         self.room = None
 
-        await self.send_json({
-            "leave": room_id
-        })
+        await self.send_json({"leave": room_id})
 
     async def send_room(self, room_id, message):
         """Called in receive_json to send a message to private room"""
@@ -134,65 +129,51 @@ class PrivateChatConsumer(AsyncJsonWebsocketConsumer):
                     "type": "chat.message",
                     "username": user.username,
                     "user_id": user.id,
-                    "profile_image": (user.profile_image.url
-                                      if user.profile_image else None),
-                    "message": message
-                }
+                    "profile_image": (
+                        user.profile_image.url if user.profile_image else None
+                    ),
+                    "message": message,
+                },
             )
         else:
             raise ClientError("ROOM_ACCESS_DENIED", "Room access denied")
 
-    async def chat_join(self, event):
+    async def chat_join(self, event: dict):
         """Called when someone has joined the chat"""
         print("PrivateChatConsumer", "chat_join", self.scope["user"])
+        event.pop("type", None)
+        event["msg_type"] = MSG_TYPE_ENTER
+        event["message"] = f"{event['username']} connected"
         if event["username"]:
-            await self.send_json({
-                "msg_type": MSG_TYPE_ENTER,
-                "room_id": event["room_id"],
-                "profile_image": event["profile_image"],
-                "username": event["username"],
-                "message": event["username"] + " connected."
-            })
+            await self.send_json(event)
 
     async def chat_leave(self, event):
         """Called when someone leaves the chat"""
         print("PrivateChatConsumer", "chat_leave")
+        event.pop("type", None)
+        event["msg_type"] = MSG_TYPE_LEAVE
+        event["message"] = f"{event['username']} disconnected"
         if event["username"]:
-            await self.send_json({
-                "msg_type": MSG_TYPE_LEAVE,
-                "room_id": event["room_id"],
-                "profile_image": event["profile_image"],
-                "username": event["username"],
-                "message": event["username"] + " disconnected."
-            })
+            await self.send_json(event)
 
     async def chat_message(self, event):
         """Called when someone has messaged in room"""
         print("PrivateChatConsumer", "chat_message")
-        await self.send_json({
-            "msg_type": MSG_TYPE_MESSAGE,
-            "username": event["username"],
-            "user_id": event["user_id"],
-            "profile_image": event["profile_image"],
-            "message": event["message"],
-            "natural_timestamp": humanize_or_normal(timezone.now())
-        })
+        event.pop("type", None)
+        event["msg_type"] = MSG_TYPE_MESSAGE
+        event["natural_timestamp"] = humanize_or_normal(timezone.now())
+        await self.send_json(event)
 
-    async def send_previous_messages(self, messages, new_page_number):
+    async def send_previous_messages(self, payload: dict):
         """Sends previous messages to client"""
         print("PrivateChatConsumer", "send_previous_messages")
-        await self.send_json({
-            "messages_payload": "previous_messages",
-            "messages": messages,
-            "new_page_number": new_page_number
-        })
+        payload["messages_payload"] = "previous_messages"
+        await self.send_json(payload)
 
     async def send_user_info(self, user_details):
         """Sends the user details to the client"""
         print("PrivateChatConsumer", "send_user_info")
-        await self.send_json({
-            "user": user_details
-        })
+        await self.send_json({"user": user_details})
 
     async def handle_client_error(self, e: ClientError):
         """Called on ClientError"""
