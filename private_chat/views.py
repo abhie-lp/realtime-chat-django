@@ -46,9 +46,14 @@ async def private_chat_room_view(request):
     frnd_msg = [
         {
             "friend": (room.user2 if room.user1_id == user.id else room.user1),
-            "message": "This is my last message",
+            "message": chat.content[:20]
+            if (chat := await room.privateroomchat_set.alast())
+            else "Start chat",
         }
         async for room in rooms
     ]
-    ctx = {"debug_mode": settings.DEBUG, "friend_msg": frnd_msg}
-    return render(request, "private_chat/chat_room.html", ctx)
+    return render(
+        request,
+        "private_chat/chat_room.html",
+        {"debug_mode": settings.DEBUG, "friend_msg": frnd_msg},
+    )
