@@ -10,8 +10,8 @@ from private_chat.models import PrivateChatRoom
 @login_required()
 async def private_chat_room_view(request):
     """View for private chat room"""
-    request.user = request.auser()
-    user = await request.user
+    request.user = await request.auser()
+    user = request.user
     meeting_with = request.GET.get("meeting-with")
 
     # Check if room exists between two users.

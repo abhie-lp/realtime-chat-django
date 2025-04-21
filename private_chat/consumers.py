@@ -6,7 +6,7 @@ from channels.generic.websocket import AsyncJsonWebsocketConsumer
 from utils.exceptions import ClientError
 from utils.timestamp import humanize_or_normal
 
-from .constants import *
+from .constants import MSG_TYPE_ENTER, MSG_TYPE_LEAVE, MSG_TYPE_MESSAGE
 from .websockets import (
     get_user_info,
     get_room_or_error,
