@@ -31,6 +31,6 @@ class Notification(models.Model):
         return f"{self.by_user.username} -> {self.for_user.username}"
 
     @property
-    def get_model(self):
+    def model(self):
         """Return the model name for which the notification is created"""
         return self.content_type.model

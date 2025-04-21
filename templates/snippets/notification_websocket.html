@@ -1,11 +1,39 @@
+{% load static %}
+
+<style type="text/css">
+  .notification-thumbnail-image {
+    height: 50px;
+    width: 50px;
+  }
+  .general-card:hover {
+    cursor: pointer;
+    background: #f2f2f2;
+  }
+  .general-card {
+    border-bottom: 1px solid var(--main-background-color);
+  }
+  .timestamp-text {
+    color: var(--secondary-text-color);
+  }
+
+  #id_notifications_loading_spinner {
+    position: absolute;
+    margin-top: 40px;
+  }
+</style>
+
 <script type="text/javascript">
+  function createNewElement(name) {
+    return document.createElement(name);
+  }
+
   (function () {
     const ws_scheme = window.location.protocol == "https:" ? "wss" : "ws";
     let ws_path
     if (window.location.protocol != "https:") {
       ws_path = `${ws_scheme}://${window.location.host}/`;
     } else {
-      ws_path = `${ws_scheme}://${window.location.host}:8001/`;
+      ws_path = `${ws_scheme}://${window.location.host}/`;
     }
 
     const websocket = new WebSocket(ws_path);
@@ -15,6 +43,8 @@
      */
     websocket.onopen = () => {
       console.log("Notification Websocket onopen");
+      setupGeneralNotificationsMenu()
+      getFirstGeneralNotificationsPage()
     }
 
     /*
@@ -37,6 +67,230 @@
     websocket.onmessage = (message) => {
       console.log("Notification Websocket onmessage");
       const data = JSON.parse(message.data);
+      console.log("NOTIFICATION onmessage data", data)
+
+      if (data.type == 0) {
+        handleGeneralNotificationsData(data["notifications"], data["new_page_number"])
+      }
     }
+
+    if (websocket.readyState == WebSocket.OPEN) {
+      console.log("Notification socket OPEN complete")
+    } else if (websocket.readyState == WebSocket.CONNECTING) {
+      console.log("Notification socket is CONNECTING")
+    }
+
+  function setupGeneralNotificationsMenu() {
+    const notificationContainer = document.getElementById("id_general_notificaions_container")
+    if (notificationContainer != null) {
+      card = createGeneralNotificationCard("id_no_general_notifications");
+      const div = createNewElement("div")
+      div.classList.add("d-flex", "flex-row", "align-items-start")
+
+      const span = createNewElement("span")
+      span.classList.add("align-items-start", "pt-1", "m-auto")
+      span.innerHTML = "You have no notifications"
+      div.appendChild(span)
+      card.appendChild(div)
+      notificationContainer.append(card)
+    }
+  }
+
+  function clearNoGeneralNotificationCard() {
+    const element = document.getElementById("id_no_general_notifications")
+    if (element != null && element != undefined) {
+      document.getElementById("id_general_notifications_container").removeChild(element)
+    }
+  }
+
+  function createGeneralNotificationCard(cardId) {
+    const card = createNewElement("card")
+    if (cardId != undefined) {
+      card.id = cardId
+    }
+    card.classList.add("d-flex", "flex-column", "align-items-start", "general-card", "p-4")
+    return card
+  }
+
+  function createGeneralProfileImageThumbnail(notification) {
+    const img = createNewElement("img")
+    img.classList.add("notification-thumbnail-image", "img-fluid", "rounded-circle", "me-2")
+    const imgUrl = notification["from"]["image_url"]
+    img.src = imgUrl || "{% static 'images/dummy_image.png' %}";
+    img.id = assignGeneralImgId(notification)
+    return img
+  }
+
+  function createGeneralTimestampElement(notification) {
+    const timestamp = createNewElement("p")
+    timestamp.classList.add("small", "pt-2", "timestamp-text")
+    timestamp.innerHTML = notification["natural_timestamp"]
+    timestamp.id = assignGeneralTimestampId(notification)
+    return timestamp
+  }
+
+  function createFriendListElement(notification) {
+    const card = createGeneralNotificationCard()
+    card.id = assignGeneralCardId(notification)
+    card.addEventListener("click", (event) => {
+      generalRedirect(notification["actions"]["redirect_url"])
+    })
+    const div1 = createNewElement("div")
+    div1.classList.add("d-flex", "flex-row", "align-items-start")
+    div1.id = assignGeneralDiv1Id(notification)
+
+    const img = createGeneralProfileImageThumbnail(notification)
+    div1.appendChild(img)
+
+    const span = createNewElement("span")
+    span.classList.add("align-items-start", "pt-1", "m-auto")
+    if (notification["description"].length > 50) {
+      span.innerHTML = notification["description"].slice(0, 50) + "..."
+    } else {
+      span.innerHTML = notification["verb"]
+    }
+    span.id = assignGeneralDescriptionId(notification)
+    div1.appendChild(span)
+    card.appendChild(div1)
+    card.appendChild(createGeneralTimestampElement(notification))
+  }
+
+  function createFriendRequestElement(notification) {
+    card = createGeneralNotificationCard()
+    card.id = assignGeneralCardId(notification)
+    card.addEventListener("click", (event) => {
+      generalRedirect(notification["actions"]["redirect_url"])
+    })
+
+    if (notification["active"] == true) {
+      div1 = createNewElement("div")
+      div1.classList.add("d-flex", "flex-row", "align-items-start")
+      div1.id = assignGeneralDiv1Id(notification)
+
+      img = createGeneralProfileImageThumbnail(notification)
+      div1.appendChild(img)
+
+      span = createNewElement("span")
+      span.classList.add("m-auto")
+      span.innerHTML = notification["description"]
+      span.id = assignGeneralDescriptionId(notification)
+      div1.appendChild(span)
+      card.appendChild(div1)
+
+      div2 = createNewElement("div")
+      div2.classList.add("d-flex", "flex-row", "mt-2")
+      div2.id = assignGeneralDiv2Id(notification)
+
+      pos_action = createNewElement("a")
+      pos_action.classList.add("btn", "btn-primary", "me-2")
+      pos_action.href = "#"
+      pos_action.addEventListener("click", (event) => {
+        event.stopPropagation()
+        sendAcceptFriendRequestToSocket(notification["id"])
+      })
+      pos_action.id = assignGeneralPosActionId(notification)
+      div2.appendChild(pos_action)
+
+      neg_action = createNewElement("a")
+      neg_action.classList.add("btn", "btn-seconday")
+      neg_action.href = "#"
+      neg_action.addEventListener("click", (event) => {
+        event.stopPropagation()
+        sendAcceptFriendRequestToSocket(notification["id"])
+      })
+      neg_action.id = assignGeneralNegActionId(notification)
+      div2.appendChild(neg_action)
+      card.append(div2)
+    } else {
+      const div1 = createNewElement("div")
+      div1.classList.add("d-flex", "flex-row","align-items-start")
+      div1.id = assignGeneralDiv1Id(notification)
+
+      img = createGeneralProfileImageThumbnail(notification)
+      div1.appendChild(img)
+
+      span = createNewElement("span")
+      span.classList.add("m-auto")
+      span.innerHTML = notification["description"]
+      span.id = assignGeneralDescriptionId(notification)
+      div1.appendChild(span)
+      card.appendChild(div1)
+    }
+    card.appendChild(createGeneralTimestampElement(notification))
+    return card
+  }
+
+  function appendBottomGeneralNotification(notification) {
+    switch(notification["type"]) {
+      case "friendrequest":
+        notificationContainer = document.getElementById("id_general_notifications_container")
+        card = createFriendRequestElement(notification)
+        notificationContainer.appendChild(card)
+        break;
+      case "friendlist":
+        notificationContainer = document.getElementById("id_general_notifications_container")
+        card = createFriendListElement(notification)
+        notificationContainer.appendChild(card)
+        break;
+      default:
+        console.log("Invalid notification type", notification["type"])
+    }
+  }
+
+  function handleGeneralNotificationsData(notifications, new_page_number) {
+    if (notifications.length > 0) {
+      clearNoGeneralNotificationCard()
+      notifications.forEach(notification => {
+        appendBottomGeneralNotification(notification)
+      })
+    }
+  }
+
+  function getFirstGeneralNotificationsPage() {
+    {% if request.user.is_authenticated %}
+      websocket.send(JSON.stringify({
+        "command": "general_notifications",
+        "page_number": 1
+      }))
+    {% endif %}
+  }
   })()
+</script>
+
+<script type="text/javascript">
+  function generalRedirect(url) {
+    window.location.href = url;
+  }
+
+  function assignGeneralDiv1Id(notification) {
+    return "id_general_div1_" + notification["id"];
+  }
+
+  function assignGeneralImgId(notification) {
+    return "id_general_img_" + notification["id"];
+  }
+
+  function assignGeneralDescriptionId(notification) {
+    return "id_general_verb_" + notification["id"];
+  }
+
+  function assignGeneralDiv2Id(notification) {
+    return "id_general_div2_" + notification["id"];
+  }
+
+  function assignGeneralPosActionId(notification) {
+    return "id_general_pos_action_" + notification["id"];
+  }
+
+  function assignGeneralNegActionId(notification) {
+    return "id_general_neg_action_" + notification["id"];
+  }
+
+  function assignGeneralTimestampId(notification) {
+    return "id_timestamp_" + notification["id"];
+  }
+
+  function assignGeneralCardId(notification) {
+    return "id_notification_" + notification["id"];
+  }
 </script>

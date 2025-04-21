@@ -12,11 +12,11 @@ class LazyNotificationEncoder(Serializer):
     def get_dump_object(self, obj: Notification):
         """Serializer the notification object"""
         return {
-            "notification_type": obj.get_model,
+            "notification_type": obj.model,
             "id": obj.pk,
             "description": obj.description,
             "is_active": (obj.content_type.is_active
-                          if obj.get_model == "friendrequest" else None),
+                          if obj.model == "friendrequest" else None),
             "is_read": obj.read,
             "natural_timestamp": naturaltime(obj.created_at),
             "timestamp": obj.created_at,
