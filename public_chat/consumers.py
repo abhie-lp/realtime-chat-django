@@ -47,18 +47,19 @@ class PublicChatConsumer(AsyncJsonWebsocketConsumer):
         room_id = content.get("room_id")
 
         try:
-            if command == "SEND":
-                if not message.strip():
-                    raise ClientError(422, "You can't send an empty message.")
-                await self.send_room_message(room_id, message)
-            elif command == "JOIN":
-                await self.join_room(room_id)
-            elif command == "LEAVE":
-                await self.leave_room(room_id)
-            elif command == "ROOM_MESSAGES":
-                room = await get_room_or_error(room_id)
-                payload = await get_room_chats(room, content["page_number"])
-                await self.send_room_previous_chats(payload)
+            match command:
+                case "SEND":
+                    if not message.strip():
+                        raise ClientError(422, "You can't send an empty message.")
+                    await self.send_room_message(room_id, message)
+                case "JOIN":
+                    await self.join_room(room_id)
+                case "LEAVE":
+                    await self.leave_room(room_id)
+                case "ROOM_MESSAGES":
+                    room = await get_room_or_error(room_id)
+                    payload = await get_room_chats(room, content["page_number"])
+                    await self.send_room_previous_chats(payload)
         except ClientError as e:
             await self.handle_client_error(e)
 
@@ -94,7 +95,6 @@ class PublicChatConsumer(AsyncJsonWebsocketConsumer):
         print("PublicChatConsumer", "chat_message from user", event["user_id"])
         event["msg_type"] = MSG_TYPE_MESSAGE
         event["natural_timestamp"] = humanize_or_normal(timezone.now())
-        event.pop("type", None)
         await self.send_json(event)
 
     async def join_room(self, room_id):
@@ -129,7 +129,7 @@ class PublicChatConsumer(AsyncJsonWebsocketConsumer):
                 await self.channel_layer.group_send(
                     room.group_name,
                     {
-                        "type": "connected.users.count",
+                        "type": "connected_users_count",
                         "connected_users_count": connected_users_count
                     }
                 )
@@ -160,7 +160,7 @@ class PublicChatConsumer(AsyncJsonWebsocketConsumer):
                 await self.channel_layer.group_send(
                     room.group_name,
                     {
-                        "type": "connected.users.count",
+                        "type": "connected_users_count",
                         "connected_users_count": connected_users_count
                     }
                 )
@@ -182,6 +182,5 @@ class PublicChatConsumer(AsyncJsonWebsocketConsumer):
         """Send the number of connected users to the group"""
         print("PublicChatConsumer", "connected_users_count",
               event["connected_users_count"])
-        event.pop("type", None)
         event["msg_type"] = MSG_TYPE_CONNECTED_USERS_COUNT
         await self.send_json(event)
