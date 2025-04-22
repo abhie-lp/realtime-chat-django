@@ -11,9 +11,9 @@ from private_chat.utils import get_or_create_chat
 
 class FriendList(models.Model):
     """Model to store friends of user"""
+
     user: Account = models.OneToOneField(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
-        related_name="friend_list"
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="friend_list"
     )
     friends = models.ManyToManyField(
         settings.AUTH_USER_MODEL, blank=True, related_name="friends"
@@ -47,7 +47,7 @@ class FriendList(models.Model):
             chat.is_active = False
             chat.save()
 
-    def unfriend(self, friend_to_unfriend):
+    def unfriend(self, friend_to_unfriend) -> Notification:
         """
         Handle unfriend initiated by user.
         Remove users from each others friend list.
@@ -60,13 +60,12 @@ class FriendList(models.Model):
         friend_to_unfriend.friend_list.remove_friend(self.user)
 
         # Create notification for the person getting
-        self.notifications.create(
+        return self.notifications.create(
             for_user=friend_to_unfriend,
             by_user=self.user,
-            redirect_url=reverse("account:view",
-                                 args=(friend_to_unfriend.username,)),
+            redirect_url=reverse("account:view", args=(friend_to_unfriend.username,)),
             description=f"You are no longer friends with {self.user.username}",
-            content_type=ContentType.objects.get_for_model(self)
+            content_type=ContentType.objects.get_for_model(self),
         )
 
     async def is_friend(self, user):
@@ -76,15 +75,16 @@ class FriendList(models.Model):
 
 class FriendRequest(models.Model):
     """Model for friend request sent from one user to other"""
+
     # User sending the request
     sender: Account = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
-        related_name="requests_sent"
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="requests_sent"
     )
     # User receiving the request
     receiver: Account = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
-        related_name="requests_received"
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="requests_received",
     )
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -94,7 +94,7 @@ class FriendRequest(models.Model):
     def __str__(self):
         return f"{self.sender.username} --> {self.receiver.username}"
 
-    def accept(self):
+    def accept(self) -> Notification:
         """Accept a  friend request and update sender and receiver"""
         # Add receiver to sender friend-list
         self.sender.friend_list.add_friend(self.receiver)
@@ -107,27 +107,25 @@ class FriendRequest(models.Model):
         self.save()
 
         # Create a new entry in the Notifications table
-        self.notifications.create(
+        return self.notifications.create(
             for_user=self.sender,
             by_user=self.receiver,
-            redirect_url=reverse("account:view",
-                                 args=(self.receiver.username,)),
+            redirect_url=reverse("account:view", args=(self.receiver.username,)),
             description=f"You are now friends with {self.receiver.username}",
             content_type=ContentType.objects.get_for_model(self),
         )
 
-    def decline(self):
+    def decline(self) -> Notification:
         """Decline a friend request from receiver side and update"""
         self.is_active = False
         self.save()
 
-        self.notifications.create(
+        return self.notifications.create(
             for_user=self.sender,
             by_user=self.receiver,
-            redirect_url=reverse("account:view",
-                                 args=(self.receiver.username,)),
+            redirect_url=reverse("account:view", args=(self.receiver.username,)),
             description=f"{self.receiver.username} declined you request.",
-            content_type=ContentType.objects.get_for_model(self)
+            content_type=ContentType.objects.get_for_model(self),
         )
 
     def cancel(self):

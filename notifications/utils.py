@@ -8,13 +8,12 @@ class LazyNotificationEncoder(Serializer):
     def get_dump_object(self, obj):
         content_type = obj.model
         dump_object = {
-            "type": content_type,
+            "notification": content_type,
             "id": obj.id,
             "description": obj.description,
-            "active": obj.content_object.is_active,
             "read": obj.read,
-            "natural_timestamp": naturaltime(obj.created_at),
-            "timestamp": str(obj.created_at),
+            "natural_timestamp": str(naturaltime(obj.created_at)),
+            "timestamp": obj.created_at.strftime("%Y-%m-%y %H:%M:%S"),
             "actions": {
                     "redirect_url": obj.redirect_url,
             },
@@ -23,6 +22,7 @@ class LazyNotificationEncoder(Serializer):
             }
         }
         if content_type == "friendrequest":
+            dump_object["active"] = obj.content_object.is_active
             return dump_object
         elif content_type == "friendlist":
             return dump_object
