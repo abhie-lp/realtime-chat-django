@@ -40,6 +40,8 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
                     await self.send_general_notifications(payload)
                 else:
                     await self.send_json({"error": "Something went wrong"})
+            case "read":
+                await websocket.mark_notification_read(content.get("notification"))
             case "ping":
                 self.send_json({"type": "pong"})
         print("NotificationConsumer: receive_json", command)

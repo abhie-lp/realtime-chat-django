@@ -1,6 +1,5 @@
 from asgiref.sync import async_to_sync
 from .models import Notification
-from friends.models import FriendList, FriendRequest
 from django.core.paginator import Paginator
 from channels.db import database_sync_to_async
 from channels.layers import get_channel_layer
@@ -25,6 +24,10 @@ def general_notifications(user, page_number):
             "new_page_number": page_number + 1,
         }
     return None
+
+
+async def mark_notification_read(pk: int):
+    await Notification.objects.filter(pk=pk).aupdate(read=True)
 
 
 def send_notification(notification: Notification, user_id: int) -> None:
