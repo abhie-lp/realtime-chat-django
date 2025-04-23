@@ -31,7 +31,7 @@
               return "<pre class='hljs'><code>" +
                 hljs.highlight(lang, str, true).value +
                 '</code></pre>';
-            } catch (_) {}
+            } catch (_) { }
           }
           return '<pre class="hljs"><code>' + md.utils.escapeHtml(str) + '</code></pre>';
         },
@@ -56,7 +56,7 @@
       const profileImageImg = document.createElement("img");
       profileImageImg.addEventListener("click", e => selectUserId(username));
       profileImageImg.classList.add("profile-image", "rounded-circle", "img-fluid");
-      if (profileImage  !== null && profileImageImg !== undefined) {
+      if (profileImage !== null && profileImageImg !== undefined) {
         profileImageImg.src = profileImage;
       } else {
         profileImageImg.src = "{% static 'images/dummy_image.png' %}";
@@ -118,25 +118,22 @@
     }
 
     const appendChatMessage = (data, maintainPosition, isNewMessage) => {
-      const {msg_type, username, profile_image, message, natural_timestamp} = data;
+      const { msg_type, username, profile_image, message, natural_timestamp } = data;
       switch (msg_type) {
         case 0:
           createChatMessageElement(message, username, profile_image, natural_timestamp, maintainPosition, isNewMessage);
           break;
 
         case 1:
-            setOnlineOfflineStatus(msg_type);
-            // Inform the other friend that you were already present in the chat
-            if (!data.present) {
-              sendData({
-                "command": "PRESENT",
-                "room_id": roomId
-              })
-            }
-          break;
-
         case 2:
-            setOnlineOfflineStatus(msg_type);
+          setOnlineOfflineStatus(msg_type);
+          // Inform the other friend that you were already present in the chat
+          if (msg_type === 1 && !data.present) {
+            sendData({
+              "command": "PRESENT",
+              "room_id": roomId
+            })
+          }
           break;
         default:
           console.log("Unsupported message type.");
@@ -220,9 +217,9 @@
       const wsScheme = window.location.protocol == "https:" ? "wss" : "ws";
 
       {% if debug_mode %}
-        wsPath = `${wsScheme}://${window.location.host}/private-chat/${roomId}/`;
+      wsPath = `${wsScheme}://${window.location.host}/private-chat/${roomId}/`;
       {% else %}
-        wsPath = `${wsScheme}://${window.location.host}:8001/private-chat/${ roomId }/`;
+      wsPath = `${wsScheme}://${window.location.host}:8001/private-chat/${roomId}/`;
       {% endif %}
 
       websocket = new WebSocket(wsPath);
@@ -260,27 +257,24 @@
         console.log("RECEIVED", data)
 
         if (data.join) {
-          // Handle join
+          // Handle successful join to the room
           getUserInfo();
           enableChatLogScrollListener();
-
           // Get previous chat messages between the users
           getPreviousChatMessages();
         } else if (data.user) {
-
           // Handle data sent by user
           handleUserInfo(data.user)
         } else if (data.error) {
-
           // Handle error from server
           showClientErrorModal(data.message);
-        } else if ([0, 1, 2].includes(data.msg_type)) {
-
-          // Handle message types
-          appendChatMessage(data, false, true);
         } else if (data.messages_payload) {
+          // Handle previous messages
           showChatLogLoadingSpinner(false);
           handleMessagesPayload(data.messages, data.new_page_number);
+        } else {
+          // Handle the message types
+          appendChatMessage(data, false, true);
         }
       }
     }
@@ -327,7 +321,7 @@
       })
     }
 
-    Array.from(friendContainerDiv).forEach(function(div) {
+    Array.from(friendContainerDiv).forEach(function (div) {
       div.addEventListener('click', (e) => {
         getPrivateChatID(e);
 
@@ -357,7 +351,7 @@
       if (message !== null && message !== undefined && message.trim().length !== 0) {
         sendData({
           "command": "SEND",
-          "message": message.trimRight(),
+          "message": message.trim(),
           "room_id": roomId
         });
         chatInput.value = ""

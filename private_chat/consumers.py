@@ -24,7 +24,8 @@ class PrivateChatConsumer(AsyncJsonWebsocketConsumer):
         self.user: Account = self.scope["user"]
         print("PrivateChatConsumer", "connect", self.user)
         if not self.user.is_authenticated:
-            self.close()
+            await self.close()
+            return
         await self.accept()
         # room_id acts as a check if connected or else None.
         self.room = None
@@ -79,12 +80,7 @@ class PrivateChatConsumer(AsyncJsonWebsocketConsumer):
         await self.send_json({"join": room_id})
         await self.channel_layer.group_send(
             self.room.group_name,
-            {
-                "type": "chat.join",
-                # "room_id": self.room.id,
-                "username": self.user.username,
-                "present": present
-            },
+            {"type": "chat.join", "username": self.user.username, "present": present},
         )
 
     async def leave_room(self, room_id):
@@ -95,7 +91,6 @@ class PrivateChatConsumer(AsyncJsonWebsocketConsumer):
             self.room.group_name,
             {
                 "type": "chat.leave",
-                # "room_id": self.room.id,
                 "username": self.user.username,
             },
         )
@@ -107,20 +102,18 @@ class PrivateChatConsumer(AsyncJsonWebsocketConsumer):
         """Called in receive_json to send a message to private room"""
         print("PrivateChatConsumer", "send_json", room_id)
         if self.room is not None and self.room.id == room_id:
-            user = self.user
-
             # Store the message in DB
-            await create_new_private_chat(self.room, user, message)
+            await create_new_private_chat(self.room, self.user, message)
 
-            # Transfer the message to client and other user
+            # Transfer the message to client and other self.user
             await self.channel_layer.group_send(
                 self.room.group_name,
                 {
                     "type": "chat.message",
-                    "username": user.username,
-                    "user_id": user.id,
+                    "username": self.user.username,
+                    "user_id": self.user.id,
                     "profile_image": (
-                        user.profile_image.url if user.profile_image else None
+                        self.user.profile_image.url if self.user.profile_image else None
                     ),
                     "message": message,
                 },
