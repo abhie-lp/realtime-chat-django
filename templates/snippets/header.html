@@ -1,123 +1,177 @@
 {% load static %}
 <div class="d-flex flex-row p-3 px-md-4 mb-4 bg-white border-bottom shadow-sm">
-    <!-- MEDIUM+ screens -->
-    <div class="d-none d-md-flex flex-row my-auto flex-grow-1 align-items-center">
-        <h5 class="me-3 font-weight-normal justify-content-start">
-            <a href="{% url 'home' %}" class="p-2 text-dark">Home</a>
-        </h5>
-        <form class="search-bar justify-content-start"
-              action="{% url 'account:search' %}">
-            <input type="text"
-                   class="form-control"
-                   name="q"
-                   id="id_q_large"
-                   placeholder="Search...."
-                   required
-                   style="width: 20em;">
-        </form>
-        <div class="d-flex flex-row flex-row-reverse flex-grow-1">
-            <nav>
-                {% if request.user.is_authenticated %}
-                    <div class="dropdown dropleft show p-2">
-                        <div class="d-flex flex-row">
-                            <!-- chat notifications -->
-                            <div class="btn-group dropleft">
-                                <div class="d-flex notifications-icon-container rounded-circle align-items-center me-3"
-                                     id="id_chat_notification_dropdown_toggle"
-                                     data-bs-toggle="dropdown">
-                                    <span id="id_chat_notifications_count" class="notify-badge"></span>
-                                    <span class="d-flex material-icons notifications-material-icon m-auto">chat</span>
-                                    <div class="dropdown-menu scrollable-menu"
-                                         aria-labelledby="id_chat_notification_dropdown_toggle"
-                                         id="id_chat_notifications_container"></div>
-                                </div>
-                            </div>
-                            <!-- end chat notifications -->
-                            <!-- general notifications -->
-                            <div class="btn-group dropstart">
-                                <div class="d-flex notifications-icon-container rounded-circle align-items-center me-3"
-                                     id="id_notification_dropdown_toggle"
-                                     data-bs-toggle="dropdown"
-                                     aria-expanded="false">
-                                    <span id="id_general_notifications_count" class="notify-badge"></span>
-                                    <span class="d-flex material-icons notifications-material-icon m-auto">notifications</span>
-                                    <div class="dropdown-menu scrollable-menu"
-                                         aria-labelledby="id_chat_notification_dropdown_toggle"
-                                         id="id_general_notifications_container"></div>
-                                </div>
-                            </div>
-                            <!-- end general notifications -->
-                            <!-- account notifications -->
-                            <div class="btn-group dropstart">
-                                <img class="account-image rounded-circle m-auto d-block dropdown-toggle"
-                                     id="id_profile_links"
-                                     data-bs-toggle="dropdown"
-                                     aria-haspopup="true"
-                                     aria-expanded="false"
-                                     {% if request.user.profile_image %} src="{{ request.user.profile_image.url }}" {% else %} src="{% static 'images/dummy_image.png' %}" {% endif %}
-                                     alt="account logo"
-                                     width="40"
-                                     height="40" />
-                                <div class="dropdown-menu" aria-labelledby="id_profile_links">
-                                    <a class="dropdown-item"
-                                       href="{% url 'account:view' username=request.user.username %}">Account</a>
-                                    <a class="dropdown-item" href="{% url 'logout' %}">Logout</a>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- end account notifications -->
-                    </div>
+  <!-- MEDIUM+ screens -->
+  <div class="d-none d-md-flex flex-row my-auto flex-grow-1 align-items-center">
+    <h5 class="me-3 font-weight-normal justify-content-start">
+      <a href="{% url 'home' %}" class="p-2 text-dark">Home</a>
+    </h5>
+    <form
+      class="search-bar justify-content-start"
+      action="{% url 'account:search' %}"
+    >
+      <input
+        type="text"
+        class="form-control"
+        name="q"
+        id="id_q_large"
+        placeholder="Search...."
+        required
+        style="width: 20em"
+      />
+    </form>
+    <div class="d-flex flex-row flex-row-reverse flex-grow-1">
+      <nav>
+        {% if request.user.is_authenticated %}
+        <div class="dropdown dropleft show p-2">
+          <div class="d-flex flex-row">
+            <!-- chat notifications -->
+            <div class="btn-group dropleft">
+              <div
+                class="d-flex notifications-icon-container rounded-circle align-items-center me-3"
+                id="id_chat_notification_dropdown_toggle"
+                data-bs-toggle="dropdown"
+              >
+                <span
+                  id="id_chat_notifications_count"
+                  class="notify-badge"
+                ></span>
+                <span
+                  class="d-flex material-icons notifications-material-icon m-auto"
+                  >chat</span
+                >
+                <div
+                  class="dropdown-menu scrollable-menu"
+                  aria-labelledby="id_chat_notification_dropdown_toggle"
+                  id="id_chat_notifications_container"
+                ></div>
+              </div>
+            </div>
+            <!-- end chat notifications -->
+            <!-- general notifications -->
+            <div class="btn-group dropstart">
+              <div
+                class="d-flex notifications-icon-container rounded-circle align-items-center me-3"
+                id="id_notification_dropdown_toggle"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+              >
+                <span
+                  id="id_general_notifications_count"
+                  class="notify-badge"
+                ></span>
+                <span
+                  class="d-flex material-icons notifications-material-icon m-auto"
+                  >notifications</span
+                >
+              </div>
+              <div
+                class="dropdown-menu scrollable-menu"
+                aria-labelledby="id_notification_dropdown_toggle"
+                id="id_general_notifications_container"
+              ></div>
+            </div>
+            <!-- end general notifications -->
+            <!-- account notifications -->
+            <div class="btn-group dropstart">
+              <img
+                class="account-image rounded-circle m-auto d-block dropdown-toggle"
+                id="id_profile_links"
+                data-bs-toggle="dropdown"
+                aria-haspopup="true"
+                aria-expanded="false"
+                {% if request.user.profile_image %}
+                src="{{ request.user.profile_image.url }}"
                 {% else %}
-                    <a class="btn btn-link link-dark link-offset-2 link-offset-3-hover link-underline link-underline-opacity-0 link-underline-opacity-75-hover" href="{% url 'login' %}">Login</a>
-                    <a class="btn btn-outline-primary" href="{% url 'register' %}">Register</a>
+                src="{% static 'images/dummy_image.png' %}"
                 {% endif %}
-            </nav>
+                alt="account logo"
+                width="40"
+                height="40"
+              />
+              <div class="dropdown-menu" aria-labelledby="id_profile_links">
+                <a
+                  class="dropdown-item"
+                  href="{% url 'account:view' username=request.user.username %}"
+                  >Account</a
+                >
+                <a class="dropdown-item" href="{% url 'logout' %}">Logout</a>
+              </div>
+            </div>
+          </div>
+          <!-- end account notifications -->
         </div>
+        {% else %}
+        <a
+          class="btn btn-link link-dark link-offset-2 link-offset-3-hover link-underline link-underline-opacity-0 link-underline-opacity-75-hover"
+          href="{% url 'login' %}"
+          >Login</a
+        >
+        <a class="btn btn-outline-primary" href="{% url 'register' %}"
+          >Register</a
+        >
+        {% endif %}
+      </nav>
     </div>
-    <!-- end MEDIUM+ screens -->
-    <!-- SMALL- screens -->
-    <div class="d-flex d-md-none flex-column m-auto align-items-center">
-        <h5 class="font-weight-normal">
-            <a class="p-2 text-dark" href="{% url 'home' %}">Home</a>
-        </h5>
-        <form class="search-bar justify-content-start"
-              action="{% url 'account:search' %}">
-            <input type="text"
-                   class="form-control"
-                   name="q"
-                   id="id_q_small"
-                   placeholder="Search...."
-                   required>
-        </form>
-        <div class="d-flex flex-row-reverse flex-grow-1">
-            <nav>
-                {% if request.user.is_authenticated %}
-                    <div class="dropdown dropleft show p-2">
-                        <!-- account notifications -->
-                        <div class="btn-group dropleft">
-                            <img class="account-image rounded-circle m-auto d-block dropdown-toggle"
-                                 id="id_profile_links"
-                                 data-bs-toggle="dropdown"
-                                 aria-haspopup="true"
-                                 aria-expanded="false"
-                                 {% if request.user.profile_image %} src="{{ request.user.profile_image.url }}" {% else %} src="{% static 'images/dummy_image.png' %}" {% endif %}
-                                 alt="account logo"
-                                 width="40"
-                                 height="40" />
-                            <div class="dropdown-menu" aria-labelledby="id_profile_links">
-                                <a class="dropdown-item"
-                                   href="{% url 'account:view' username=request.user.username %}">Account</a>
-                                <a class="dropdown-item" href="{% url 'logout' %}">Logout</a>
-                            </div>
-                        </div>
-                        <!-- end account notifications -->
-                    </div>
-                {% else %}
-                    <a class="p-2 text-dark" href="{% url 'login' %}">Login</a>
-                    <a class="btn btn-outline-primary m-2" href="{% url 'register' %}">Register</a>
-                {% endif %}
-            </nav>
+  </div>
+  <!-- end MEDIUM+ screens -->
+  <!-- SMALL- screens -->
+  <div class="d-flex d-md-none flex-column m-auto align-items-center">
+    <h5 class="font-weight-normal">
+      <a class="p-2 text-dark" href="{% url 'home' %}">Home</a>
+    </h5>
+    <form
+      class="search-bar justify-content-start"
+      action="{% url 'account:search' %}"
+    >
+      <input
+        type="text"
+        class="form-control"
+        name="q"
+        id="id_q_small"
+        placeholder="Search...."
+        required
+      />
+    </form>
+    <div class="d-flex flex-row-reverse flex-grow-1">
+      <nav>
+        {% if request.user.is_authenticated %}
+        <div class="dropdown dropleft show p-2">
+          <!-- account notifications -->
+          <div class="btn-group dropleft">
+            <img
+              class="account-image rounded-circle m-auto d-block dropdown-toggle"
+              id="id_profile_links"
+              data-bs-toggle="dropdown"
+              aria-haspopup="true"
+              aria-expanded="false"
+              {% if request.user.profile_image %}
+              src="{{ request.user.profile_image.url }}"
+              {% else %}
+              src="{% static 'images/dummy_image.png' %}"
+              {% endif %}
+              alt="account logo"
+              width="40"
+              height="40"
+            />
+            <div class="dropdown-menu" aria-labelledby="id_profile_links">
+              <a
+                class="dropdown-item"
+                href="{% url 'account:view' username=request.user.username %}"
+                >Account</a
+              >
+              <a class="dropdown-item" href="{% url 'logout' %}">Logout</a>
+            </div>
+          </div>
+          <!-- end account notifications -->
         </div>
+        {% else %}
+        <a class="p-2 text-dark" href="{% url 'login' %}">Login</a>
+        <a class="btn btn-outline-primary m-2" href="{% url 'register' %}"
+          >Register</a
+        >
+        {% endif %}
+      </nav>
     </div>
-    <!-- end SMALL- screens -->
+  </div>
+  <!-- end SMALL- screens -->
 </div>
