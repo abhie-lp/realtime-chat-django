@@ -6,6 +6,7 @@
     let websocket;
     let wsPath;
     let roomId;
+    const my_username = "{{ request.user.username }}"
 
     const friendContainerDiv = document.getElementsByClassName("friend-container");
 
@@ -103,41 +104,17 @@
       }
     }
 
-    const createConnectedDisconnectedElement = (message, profileImage, username) => {
-      const chatLog = document.getElementById("id_chat_log");
-
-      const newMessageDiv = document.createElement("div");
-      newMessageDiv.classList.add("d-flex", "flex-row", "message-container");
-
-      const profileImageImg = document.createElement("img");
-      profileImageImg.addEventListener("click", e => selectUserId(username));
-      profileImageImg.classList.add("profile-image", "rounded-circle", "img-fluid");
-      if (profileImage  !== null && profileImageImg !== undefined) {
-        profileImageImg.src = profileImage;
+    const setOnlineOfflineStatus = (msg_type) => {
+      const onlineBtn = document.getElementById("online-status")
+      if (msg_type == 1) {
+        // Online
+        onlineBtn.classList.add("btn-success", "bg-success")
+        onlineBtn.classList.remove("btn-dark", "bg-dark")
       } else {
-        profileImageImg.src = "{% static 'images/dummy_image.png' %}";
+        // Offline
+        onlineBtn.classList.add("btn-dark", "bg-dark")
+        onlineBtn.classList.remove("btn-success", "bg-sucess")
       }
-
-      newMessageDiv.appendChild(profileImageImg);
-
-      const div1 = document.createElement("div");
-      div1.classList.add("d-flex", "flex-column");
-
-      const div2 = document.createElement("div");
-      div2.classList.add("d-flex", "flex-row");
-
-      const usernameSpan = document.createElement("span");
-      usernameSpan.innerText = message;
-      usernameSpan.classList.add("username-span");
-      usernameSpan.addEventListener("click", e => selectUser(username));
-
-      div2.appendChild(usernameSpan);
-
-      div1.appendChild(div2)
-
-      newMessageDiv.appendChild(div1);
-
-      chatLog.insertBefore(newMessageDiv, chatLog.firstChild);
     }
 
     const appendChatMessage = (data, maintainPosition, isNewMessage) => {
@@ -148,13 +125,19 @@
           break;
 
         case 1:
-          createConnectedDisconnectedElement(message, profile_image, username);
+            setOnlineOfflineStatus(msg_type);
+            // Inform the other friend that you were already present in the chat
+            if (!data.present) {
+              sendData({
+                "command": "PRESENT",
+                "room_id": roomId
+              })
+            }
           break;
 
         case 2:
-          createConnectedDisconnectedElement(message, profile_image, username);
+            setOnlineOfflineStatus(msg_type);
           break;
-
         default:
           console.log("Unsupported message type.");
       }
@@ -167,6 +150,7 @@
         clearChatLog();
         setPageNumber(1);
         disableChatLogScrollListener();
+        setOnlineOfflineStatus(0);
       }
     };
 
