@@ -243,19 +243,26 @@
         pos_action.href = "#"
         pos_action.addEventListener("click", (event) => {
           event.stopPropagation()
-          sendAcceptFriendRequestToSocket(notification["id"])
+          console.log(pos_action.parentNode)
+          fetch(notification.actions.accept)
+          .then((resp) => {})
+          .catch((error) => console.error(error))
+          event.target.parentElement.remove()
         })
         pos_action.id = assignGeneralPosActionId(notification)
         pos_action.innerHTML = "Accept"
         div2.appendChild(pos_action)
 
         neg_action = createNewElement("a")
-        neg_action.classList.add("btn", "btn-secondary")
-        neg_action.href = "#"
         neg_action.addEventListener("click", (event) => {
           event.stopPropagation()
-          sendAcceptFriendRequestToSocket(notification["id"])
+          fetch(notification.actions.deny)
+          .then((resp) => {})
+          .catch((error) => console.error(error))
+          event.target.parentElement.remove()
         })
+        neg_action.classList.add("btn", "btn-secondary")
+        neg_action.href = "#"
         neg_action.id = assignGeneralNegActionId(notification)
         neg_action.innerHTML = "Decline"
         div2.appendChild(neg_action)
